@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Play, RefreshCcw, Users, History, Bookmark } from "lucide-react";
-import Editor from "@monaco-editor/react";
+import { Play, RefreshCcw, Users, History, Bookmark, Palette } from "lucide-react";
+import Editor, { Monaco } from "@monaco-editor/react";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { CodeTimeline } from "./CodeTimeline";
 import { fetchSandboxSnapshots, saveSandboxSnapshot, CodeSnapshot } from "../../lib/api";
@@ -17,13 +17,17 @@ export function CodeSandbox() {
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<number | null>(null);
 
+  // Load theme preference from localStorage, default to standard dark variant
+  const [theme, setTheme] = useState<string>(() => {
+    return localStorage.getItem("sandbox-editor-theme") || "vs-dark";
+  });
+
   useEffect(() => {
     fetchSandboxSnapshots().then(setSnapshots).catch(console.error);
   }, []);
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Only accept messages from our own sandbox iframe, never from
-      // other frames/windows, to avoid mixing in unrelated postMessage traffic.
       if (!iframeRef.current || event.source !== iframeRef.current.contentWindow) {
         return;
       }
@@ -54,6 +58,79 @@ export function CodeSandbox() {
       }
     },
   });
+
+  // Inject Custom Syntax Themes into Monaco Editor instance
+  const handleEditorWillMount = (monaco: Monaco) => {
+    // 1. Monokai Definition
+    monaco.editor.defineTheme("monokai", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "75715E", fontStyle: "italic" },
+        { token: "keyword", foreground: "F92672" },
+        { token: "number", foreground: "AE81FF" },
+        { token: "string", foreground: "E6DB74" },
+      ],
+      colors: {
+        "editor.background": "#272822",
+        "editor.foreground": "#F8F8F2",
+      },
+    });
+
+    // 2. Nord Theme Definition
+    monaco.editor.defineTheme("nord", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "4C566A", fontStyle: "italic" },
+        { token: "keyword", foreground: "81A1C1" },
+        { token: "number", foreground: "B48EAD" },
+        { token: "string", foreground: "A3BE8C" },
+      ],
+      colors: {
+        "editor.background": "#2E3440",
+        "editor.foreground": "#D8DEE9",
+      },
+    });
+
+    // 3. Tomorrow Night Definition
+    monaco.editor.defineTheme("tomorrow-night", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "969896", fontStyle: "italic" },
+        { token: "keyword", foreground: "B294BB" },
+        { token: "number", foreground: "DE935F" },
+        { token: "string", foreground: "B5BD68" },
+      ],
+      colors: {
+        "editor.background": "#1D1F21",
+        "editor.foreground": "#C5C8C6",
+      },
+    });
+
+    // 4. GitHub Light Definition
+    monaco.editor.defineTheme("github-light", {
+      base: "vs",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "6A737D", fontStyle: "italic" },
+        { token: "keyword", foreground: "D73A49" },
+        { token: "number", foreground: "005CC5" },
+        { token: "string", foreground: "032F62" },
+      ],
+      colors: {
+        "editor.background": "#FFFFFF",
+        "editor.foreground": "#24292E",
+      },
+    });
+  };
+
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextTheme = e.target.value;
+    setTheme(nextTheme);
+    localStorage.setItem("sandbox-editor-theme", nextTheme);
+  };
 
   const handleEditorChange = (value: string | undefined) => {
     const newCode = value || "";
@@ -158,7 +235,24 @@ export function CodeSandbox() {
               </span>
             </div>
           </div>
-          <div className="flex gap-2">
+          
+          <div className="flex items-center gap-2">
+            {/* Neobrutalist Theme Dropdown Selector */}
+            <div className="flex items-center gap-1.5 border-2 border-black rounded-lg px-2 py-1 bg-[#ffb5e8] dark:bg-[#151411] dark:border-[#2e2924] shadow-card-sm text-black dark:text-[#f0ebe2]">
+              <Palette size={14} className="text-black dark:text-[#f0ebe2]" />
+              <select
+                value={theme}
+                onChange={handleThemeChange}
+                className="bg-transparent text-xs font-bold focus:outline-none cursor-pointer"
+              >
+                <option value="vs-dark">Default Dark</option>
+                <option value="github-light">GitHub Light</option>
+                <option value="monokai">Monokai</option>
+                <option value="nord">Nord</option>
+                <option value="tomorrow-night">Tomorrow Night</option>
+              </select>
+            </div>
+
             <button
               onClick={handleManualBookmark}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition hover:bg-surface-low dark:hover:bg-surface-high border-2 border-transparent hover:border-black dark:hover:border-[#2e2924] text-text dark:text-[#f0ebe2]"
@@ -189,6 +283,7 @@ export function CodeSandbox() {
             </button>
           </div>
         </div>
+        
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           <div className="flex-1 border-b-4 lg:border-b-0 lg:border-r-4 border-black dark:border-[#2e2924] relative">
             <Editor
@@ -196,7 +291,8 @@ export function CodeSandbox() {
               defaultLanguage="javascript"
               value={code}
               onChange={handleEditorChange}
-              theme="vs-dark"
+              theme={theme}
+              beforeMount={handleEditorWillMount}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
@@ -224,7 +320,7 @@ export function CodeSandbox() {
           title="sandbox-execution"
           sandbox="allow-scripts"
           className="hidden"
-        />
+          />
       </div>
       
       {isTimelineOpen && (
