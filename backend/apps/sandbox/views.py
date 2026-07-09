@@ -8,6 +8,8 @@ from .serializers import CodeSnapshotSerializer
 from .services import verify_git_command
 
 
+from rest_framework.throttling import ScopedRateThrottle
+
 class SandboxVerifySerializer(serializers.Serializer):
     command = serializers.CharField()
     expected_command = serializers.CharField()
@@ -15,6 +17,8 @@ class SandboxVerifySerializer(serializers.Serializer):
 
 class SandboxVerifyView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "sandbox_user"
 
     def post(self, request):
         serializer = SandboxVerifySerializer(data=request.data)

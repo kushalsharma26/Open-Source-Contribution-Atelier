@@ -737,8 +737,12 @@ from .models import CodeSubmission, ExerciseAttempt, PeerReview
 from .serializers import CodeSubmissionSerializer, PeerReviewSerializer
 
 
+from rest_framework.throttling import ScopedRateThrottle
+
 class CodeSubmissionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "sandbox_user"
 
     def get(self, request):
         submissions = (
