@@ -31,6 +31,7 @@ import SkeletonContributorDashboard from "../ui/skeletons/SkeletonContributorDas
 import { CertificateModal } from "./CertificateModal";
 import { ProgressReportModal } from "./ProgressReportModal";
 import { StatsCards } from "./StatsCards";
+import { AchievementCardModal } from "./AchievementCardModal";
 import type {
   CertificateResponse,
   ContributorDashboardData,
@@ -65,6 +66,7 @@ export function ContributorDashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [showCertificate, setShowCertificate] = useState(false);
+  const [showAchievementCard, setShowAchievementCard] = useState(false);
   const [showProgressReport, setShowProgressReport] = useState(false);
   const [gitHubContributors, setGitHubContributors] = useState<GitHubContributor[]>([]);
 
@@ -281,9 +283,18 @@ return (
               : Math.floor(completedLessonsCount / 3) + 1}{" "}
             LEARNER
           </span>
-          <h1 className="text-4xl sm:text-5xl font-black text-white drop-shadow-[3.5px_3.5px_0_#000] mb-4 dark:text-[#f0ebe2] dark:drop-shadow-none">
-            Welcome to the Atelier, {user?.username}.
-          </h1>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h1 className="text-4xl sm:text-5xl font-black text-white drop-shadow-[3.5px_3.5px_0_#000] dark:text-[#f0ebe2] dark:drop-shadow-none">
+              Welcome to the Atelier, {user?.username}.
+            </h1>
+            <button
+              onClick={() => setShowAchievementCard(true)}
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[#ffebc2] text-black font-bold border-2 border-black rounded-xl hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] whitespace-nowrap"
+            >
+              <Sparkles className="w-4 h-4 text-primary" />
+              Share Card
+            </button>
+          </div>
 
           {/* --- NEW BIO RENDERER START --- */}
           {user?.bio_html && (
@@ -838,6 +849,13 @@ return (
         earnedBadges={earnedBadges}
         modules={curriculumData}
         isLessonCompleted={isLessonCompleted}
+      />
+
+      <AchievementCardModal
+        isOpen={showAchievementCard}
+        onClose={() => setShowAchievementCard(false)}
+        personalStats={personal_stats}
+        username={user?.username || "Contributor"}
       />
     </div>
   );
