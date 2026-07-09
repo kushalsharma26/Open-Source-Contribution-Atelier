@@ -2,8 +2,9 @@ import os
 import sys
 from datetime import timedelta
 from pathlib import Path
-
+# pyrefly: ignore [missing-import]
 import dj_database_url
+# pyrefly: ignore [missing-import]
 from django.core.exceptions import ImproperlyConfigured
 
 TESTING = "test" in sys.argv or "pytest" in sys.modules
@@ -42,8 +43,9 @@ if "REDIS_URL" in os.environ:
 SECRET_KEY = os.getenv(
     "SECRET_KEY", "django-insecure-dev-key-not-for-production-use-32bytes!!"
 )
+if not SECRET_KEY:
+    raise ImproperlyConfigured("SECRET_KEY environment variable is not set")
 DEBUG = os.getenv("DEBUG", "False") == "True"
-fix/security-headers
 
 # ──────────────────────────────────────────
 # Security Headers
