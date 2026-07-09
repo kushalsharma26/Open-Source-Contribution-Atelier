@@ -274,13 +274,13 @@ jobs:
             const issues = await github.paginate(github.rest.issues.listForRepo, {owner, repo, state: 'open', per_page: 100});
 
             for (const issue of issues) {
+              if (issue.pull_request) continue;
               if (issue.assignees.length === 0) continue;
               if (issue.labels.some(l => l.name === 'awaiting-response')) continue;
 
               const events = await github.paginate(github.rest.issues.listEvents, {owner, repo, issue_number: issue.number, per_page: 100});
               const assignEvent = events.filter(e => e.event === 'assigned').sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
-              if (!assignEvent) continue;
-              const assignedAt = new Date(assignEvent.created_at);
+              const assignedAt = assignEvent ? new Date(assignEvent.created_at) : new Date(issue.created_at);
               const now = new Date();
               if (now - assignedAt < twoDays) continue;
 
@@ -313,8 +313,9 @@ jobs:
             const issues = await github.paginate(github.rest.issues.listForRepo, {owner, repo, state: 'open', labels: 'awaiting-response', per_page: 100});
 
             for (const issue of issues) {
+              if (issue.pull_request) continue;
               const comments = await github.paginate(github.rest.issues.listComments, {owner, repo, issue_number: issue.number, per_page: 100});
-              const botComment = comments.reverse().find(c => c.user.type === 'Bot' && c.body.includes('It has been **2 days**'));
+              const botComment = comments.reverse().find(c => (c.user.type === 'Bot' || c.user.login === 'github-actions[bot]') && c.body.includes('It has been') && (c.body.includes('2 days') || c.body.includes('3 days')));
               if (!botComment) continue;
               const commentTime = new Date(botComment.created_at);
               const now = new Date();
