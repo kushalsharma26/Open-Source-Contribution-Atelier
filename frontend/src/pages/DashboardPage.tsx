@@ -10,6 +10,9 @@ import SkeletonContributorDashboard from "../components/ui/skeletons/SkeletonCon
 import { useRef } from "react";
 import { useElementSize } from "../hooks/useElementSize";
 import { fetchLessonsApi, Lesson } from "../lib/lessons";
+import { LessonsChart } from '../components/LessonsChart';
+import { useQuery } from '@tanstack/react-query';
+import { fetchApi } from '../lib/api';
 import { useUserProgress } from "../hooks/useUserProgress";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { BADGES } from "../constants/badges";
@@ -91,6 +94,10 @@ export function DashboardPage() {
   const { width: completionWidth } = useElementSize(completionRef);
 
   const { user } = useAuth();
+  const { data: lessonStats, isLoading: statsLoading } = useQuery({
+  queryKey: ['daily-lesson-stats'],
+  queryFn: () => fetchApi('/progress/daily-stats/'),
+  });
   const { progress, isLessonCompleted } = useUserProgress();
   const { bookmarks, isLoading: isLoadingBookmarks, toggleBookmark } = useBookmarks();
 
