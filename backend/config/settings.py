@@ -35,10 +35,6 @@ def load_dotenv(dotenv_path: Path) -> None:
 
 load_dotenv(BASE_DIR / ".env")
 
-logger.debug("DATABASE_URL present: %s", "DATABASE_URL" in os.environ)
-if "DATABASE_URL" in os.environ:
-    logger.debug("DATABASE_URL length: %d", len(os.environ["DATABASE_URL"]))
-logger.debug("REDIS_URL present: %s", "REDIS_URL" in os.environ)
 
 SECRET_KEY = os.getenv(
     "SECRET_KEY", "django-insecure-dev-key-not-for-production-use-32bytes!!"
@@ -156,13 +152,11 @@ INSTALLED_APPS = [
     "apps.webhooks",
     "apps.notes",
     "apps.recommendations",
-    "apps.cache",
     "apps.rbac",
     "apps.uploads",
     "graphene_django",
     "apps.feature_flags",
     "apps.issues",
-"apps.cache",
 "apps.moderation",
     "django_q",
 ]
@@ -264,6 +258,7 @@ GITHUB_APP={
     'WEBHOOK_SECRET': os.getenv('GITHUB_WEBHOOK_SECRET'),
 }
 GITHUB_INSTALLATION_ID = os.getenv("GITHUB_INSTALLATION_ID")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # ── Discord Integration ────────────────────────────────────────────────────────
 # Discord webhook URL for achievement announcements
