@@ -29,6 +29,7 @@ import AnalyticsDashboardPage from "../pages/AnalyticsDashboardPage";
 import TemplateMarketplacePage from "../pages/TemplateMarketplacePage";
 import { GitTerminal } from "../components/ui/GitTerminal";
 import { TerminalReplay } from "../components/ui/TerminalReplay";
+import { A11yLinterSandbox } from "../components/ui/A11yLinterSandbox";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
@@ -162,6 +163,19 @@ export function AppRouter() {
         <Route
           path="/sandbox"
           element={<SandboxPage />}
+        />
+        <Route
+          path="/a11y-sandbox"
+          element={
+            <div className="p-6 max-w-7xl mx-auto space-y-6 flex flex-col h-[calc(100vh-64px)]">
+              <h1 className="text-3xl font-black text-text dark:text-[#f0ebe2]">
+                A11y Editor Sandbox
+              </h1>
+              <div className="flex-1 min-h-[500px]">
+                <A11yLinterSandbox />
+              </div>
+            </div>
+          }
         />
         <Route
           path="/contributor-sandbox"
