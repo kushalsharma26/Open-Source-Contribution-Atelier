@@ -3,6 +3,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { GitBranch, Moon, Sun } from "lucide-react";
 import { fetchApi } from "../lib/api";
 import { useAuth } from "../features/auth/AuthContext";
+import { PublicPreview } from '../components/PublicPreview';
 import { useTheme } from "../hooks/useTheme";
 import OrganizationsGrid from "../components/OrganizationsGrid";
 
