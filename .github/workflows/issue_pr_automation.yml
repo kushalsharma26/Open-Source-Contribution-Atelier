@@ -78,16 +78,31 @@ jobs:
               await github.rest.issues.addLabels({owner, repo, issue_number: issue.number, labels: [labelName]});
             }
 
-            // Check for checkboxes or keyword in issue template
+            // Detect checkbox states for contributor program selection
             const isSsocChecked = /-\s*\[x\]\s*ssoc\s*2026/i.test(body);
             const isEcsocChecked = /-\s*\[x\]\s*ecsoc\s*2026/i.test(body);
 
-            if (isSsocChecked || /\bssoc26?\b/i.test(body) || /\bssoc26?\b/i.test(title) || /\bssoc\s*2026\b/i.test(body) || /\bssoc\s*2026\b/i.test(title)) {
+            // Detect if checkboxes exist at all (checked OR unchecked)
+            const hasSsocCheckbox = /-\s*\[[ x]\]\s*ssoc\s*2026/i.test(body);
+            const hasEcsocCheckbox = /-\s*\[[ x]\]\s*ecsoc\s*2026/i.test(body);
+            const hasAnyCheckbox = hasSsocCheckbox || hasEcsocCheckbox;
+
+            // Determine labels: if checkboxes exist, use ONLY checkbox state.
+            // Regex fallback on body/title keywords only when NO checkboxes are present.
+            const shouldAddSsoc = hasAnyCheckbox
+              ? isSsocChecked
+              : (/\bssoc26?\b/i.test(body) || /\bssoc26?\b/i.test(title) || /\bssoc\s*2026\b/i.test(body) || /\bssoc\s*2026\b/i.test(title));
+
+            const shouldAddEcsoc = hasAnyCheckbox
+              ? isEcsocChecked
+              : (/\becsoc26?\b/i.test(body) || /\becsoc26?\b/i.test(title) || /\becsoc\s*2026\b/i.test(body) || /\becsoc\s*2026\b/i.test(title));
+
+            if (shouldAddSsoc) {
               const ssocLabel = 'SSoC26';
               await ensureLabel(ssocLabel, 'c5def5', 'SSOC participation');
               await github.rest.issues.addLabels({owner, repo, issue_number: issue.number, labels: [ssocLabel]});
             }
-            if (isEcsocChecked || /\becsoc26?\b/i.test(body) || /\becsoc26?\b/i.test(title) || /\becsoc\s*2026\b/i.test(body) || /\becsoc\s*2026\b/i.test(title)) {
+            if (shouldAddEcsoc) {
               const ecsocLabel = 'ECSoC26';
               await ensureLabel(ecsocLabel, 'd4c5f9', 'ECSoC participation');
               await github.rest.issues.addLabels({owner, repo, issue_number: issue.number, labels: [ecsocLabel]});
