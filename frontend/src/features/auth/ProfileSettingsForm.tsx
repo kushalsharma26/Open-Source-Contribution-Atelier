@@ -129,7 +129,10 @@ export function ProfileSettingsForm() {
         formData.append("twitter_url", data.twitter_url || "");
         formData.append("linkedin_url", data.linkedin_url || "");
         formData.append("github_url", data.github_url || "");
-        formData.append("receive_weekly_digest", String(data.receive_weekly_digest));
+        formData.append(
+          "receive_weekly_digest",
+          String(data.receive_weekly_digest),
+        );
         if (selectedAvatar) formData.append("avatar", selectedAvatar);
         if (selectedCover) formData.append("cover_image", selectedCover);
         body = formData;
@@ -153,7 +156,7 @@ export function ProfileSettingsForm() {
         body: body,
       });
 
-      await checkUser(); 
+      await checkUser();
       addToast("Profile settings updated successfully!", "success");
       reset({
         email: data.email,
@@ -402,7 +405,7 @@ export function ProfileSettingsForm() {
         <p className="text-muted text-sm mb-4 font-medium">
           Control how we communicate with you via email.
         </p>
-        
+
         <label className="flex items-center gap-4 cursor-pointer">
           <div className="relative">
             <input
@@ -411,19 +414,24 @@ export function ProfileSettingsForm() {
               className="sr-only"
               disabled={loading}
             />
-            <div className={`block w-14 h-8 rounded-full border-4 border-black transition-colors ${
-              watch("receive_weekly_digest") ? 'bg-green-400' : 'bg-gray-300'
-            }`}></div>
-            <div className={`dot absolute left-1 top-1 bg-black w-4 h-4 rounded-full transition-transform ${
-              watch("receive_weekly_digest") ? 'transform translate-x-6' : ''
-            }`}></div>
+            <div
+              className={`block w-14 h-8 rounded-full border-4 border-black transition-colors ${
+                watch("receive_weekly_digest") ? "bg-green-400" : "bg-gray-300"
+              }`}
+            ></div>
+            <div
+              className={`dot absolute left-1 top-1 bg-black w-4 h-4 rounded-full transition-transform ${
+                watch("receive_weekly_digest") ? "transform translate-x-6" : ""
+              }`}
+            ></div>
           </div>
           <div>
             <div className="font-bold text-black uppercase tracking-wide">
               Weekly Progress Digest
             </div>
             <div className="text-muted text-sm font-medium">
-              Receive a personalized summary of your XP, streaks, and smart AI learning insights every week.
+              Receive a personalized summary of your XP, streaks, and smart AI
+              learning insights every week.
             </div>
           </div>
         </label>

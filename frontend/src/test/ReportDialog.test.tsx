@@ -14,9 +14,7 @@ describe("ReportDialog", () => {
   });
 
   it("submits report with correct payload and shows success", async () => {
-    const fetchApiSpy = vi
-      .spyOn(api, "fetchApi")
-      .mockResolvedValueOnce({});
+    const fetchApiSpy = vi.spyOn(api, "fetchApi").mockResolvedValueOnce({});
 
     const onClose = vi.fn();
 
@@ -26,7 +24,7 @@ describe("ReportDialog", () => {
         onClose={onClose}
         contentType="progress.peerreview"
         objectId={123}
-      />
+      />,
     );
 
     // Category default is SPAM; just fill description
@@ -53,7 +51,7 @@ describe("ReportDialog", () => {
     });
 
     expect(
-      await screen.findByText(/report submitted successfully/i)
+      await screen.findByText(/report submitted successfully/i),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /close/i }));
@@ -62,7 +60,7 @@ describe("ReportDialog", () => {
 
   it("shows error UI when fetchApi rejects", async () => {
     vi.spyOn(api, "fetchApi").mockRejectedValueOnce(
-      new Error("Failed to submit")
+      new Error("Failed to submit"),
     );
 
     const onClose = vi.fn();
@@ -73,14 +71,11 @@ describe("ReportDialog", () => {
         onClose={onClose}
         contentType="progress.peerreview"
         objectId={123}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: /report/i }));
 
-    expect(
-      await screen.findByText(/failed to submit/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/failed to submit/i)).toBeInTheDocument();
   });
 });
-

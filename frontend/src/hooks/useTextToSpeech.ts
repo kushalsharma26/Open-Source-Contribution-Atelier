@@ -52,20 +52,17 @@ export function useTextToSpeech(text: string) {
     }
   }, []);
 
-  const setSettings = useCallback(
-    (newSettings: Partial<TTSSettings>) => {
-      setSettingsState((prev) => {
-        const updated = { ...prev, ...newSettings };
-        try {
-          localStorage.setItem("tts_settings", JSON.stringify(updated));
-        } catch (e) {
-          console.error("Failed to save TTS settings", e);
-        }
-        return updated;
-      });
-    },
-    []
-  );
+  const setSettings = useCallback((newSettings: Partial<TTSSettings>) => {
+    setSettingsState((prev) => {
+      const updated = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem("tts_settings", JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save TTS settings", e);
+      }
+      return updated;
+    });
+  }, []);
 
   const stripMarkdown = (markdown: string) => {
     return markdown
@@ -86,7 +83,7 @@ export function useTextToSpeech(text: string) {
 
   const getBestVoice = useCallback(() => {
     if (!voices.length) return null;
-    
+
     if (settings.voiceURI) {
       const selected = voices.find((v) => v.voiceURI === settings.voiceURI);
       if (selected) return selected;
@@ -100,10 +97,10 @@ export function useTextToSpeech(text: string) {
           v.name.includes("Natural") ||
           v.name.includes("Google") ||
           v.name.includes("Microsoft")) &&
-        v.lang.startsWith("en")
+        v.lang.startsWith("en"),
     );
     const standardEnglishVoice = voices.find((v) => v.lang.startsWith("en"));
-    
+
     return premiumEnglishVoice || standardEnglishVoice || voices[0] || null;
   }, [voices, settings.voiceURI]);
 
@@ -142,7 +139,7 @@ export function useTextToSpeech(text: string) {
       setIsPaused(false);
       window.speechSynthesis.speak(utterance);
     },
-    [isSupported, settings, getBestVoice]
+    [isSupported, settings, getBestVoice],
   );
 
   const play = useCallback(() => {
@@ -189,7 +186,8 @@ export function useTextToSpeech(text: string) {
         utteranceRef.current.rate !== settings.rate ||
         utteranceRef.current.pitch !== settings.pitch ||
         utteranceRef.current.volume !== settings.volume ||
-        (utteranceRef.current.voice && utteranceRef.current.voice.voiceURI !== settings.voiceURI)
+        (utteranceRef.current.voice &&
+          utteranceRef.current.voice.voiceURI !== settings.voiceURI)
       ) {
         // Debounce slightly or restart immediately
         restart();

@@ -5,9 +5,7 @@ import { useAuth } from "../features/auth/AuthContext";
 export function DashboardPage() {
   const { user } = useAuth();
 
-  return user?.is_staff
-    ? <AdminDashboard />
-    : <ContributorDashboard />;
+  return user?.is_staff ? <AdminDashboard /> : <ContributorDashboard />;
 }
 
 export default DashboardPage;

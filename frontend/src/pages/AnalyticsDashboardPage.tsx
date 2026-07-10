@@ -118,7 +118,10 @@ export default function AnalyticsDashboardPage() {
                 <Tooltip
                   contentStyle={{
                     borderRadius: "8px",
-                    border: theme === "dark" ? "2px solid #2e2924" : "2px solid black",
+                    border:
+                      theme === "dark"
+                        ? "2px solid #2e2924"
+                        : "2px solid black",
                     fontWeight: "bold",
                     backgroundColor: theme === "dark" ? "#1f1c18" : "#fff",
                     color: theme === "dark" ? "#f0ebe2" : "#000",
@@ -168,7 +171,10 @@ export default function AnalyticsDashboardPage() {
                 <Tooltip
                   contentStyle={{
                     borderRadius: "8px",
-                    border: theme === "dark" ? "2px solid #2e2924" : "2px solid black",
+                    border:
+                      theme === "dark"
+                        ? "2px solid #2e2924"
+                        : "2px solid black",
                     fontWeight: "bold",
                     backgroundColor: theme === "dark" ? "#1f1c18" : "#fff",
                     color: theme === "dark" ? "#f0ebe2" : "#000",
@@ -229,7 +235,10 @@ export default function AnalyticsDashboardPage() {
                   <Tooltip
                     contentStyle={{
                       borderRadius: "8px",
-                      border: theme === "dark" ? "2px solid #2e2924" : "2px solid black",
+                      border:
+                        theme === "dark"
+                          ? "2px solid #2e2924"
+                          : "2px solid black",
                       fontWeight: "bold",
                       backgroundColor: theme === "dark" ? "#1f1c18" : "#fff",
                       color: theme === "dark" ? "#f0ebe2" : "#000",
@@ -279,7 +288,10 @@ export default function AnalyticsDashboardPage() {
                   <Tooltip
                     contentStyle={{
                       borderRadius: "8px",
-                      border: theme === "dark" ? "2px solid #2e2924" : "2px solid black",
+                      border:
+                        theme === "dark"
+                          ? "2px solid #2e2924"
+                          : "2px solid black",
                       fontWeight: "bold",
                       backgroundColor: theme === "dark" ? "#1f1c18" : "#fff",
                       color: theme === "dark" ? "#f0ebe2" : "#000",

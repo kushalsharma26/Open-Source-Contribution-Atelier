@@ -11,32 +11,37 @@ export function SandboxPage() {
     {
       target: "#tour-sandbox-explorer",
       title: "Project Explorer 📁",
-      content: "Create, rename, and organize your files and folders here. Navigate through your project seamlessly.",
+      content:
+        "Create, rename, and organize your files and folders here. Navigate through your project seamlessly.",
       placement: "right",
       skipBeacon: true,
     },
     {
       target: "#tour-sandbox-search",
       title: "Search Panel 🔍",
-      content: "Quickly search for keywords and find exactly what you need across all your files.",
+      content:
+        "Quickly search for keywords and find exactly what you need across all your files.",
       placement: "right",
     },
     {
       target: "#tour-sandbox-editor",
       title: "Code Editor ✍️",
-      content: "Write your code with full syntax highlighting, error checking, and auto-completion built right in.",
+      content:
+        "Write your code with full syntax highlighting, error checking, and auto-completion built right in.",
       placement: "left",
     },
     {
       target: "#tour-sandbox-tools",
       title: "Workspace Tools 🛠️",
-      content: "Export your project, save snippets for later, or manage snapshots to revert changes easily.",
+      content:
+        "Export your project, save snippets for later, or manage snapshots to revert changes easily.",
       placement: "bottom",
     },
     {
       target: "#tour-sandbox-terminal",
       title: "Interactive Terminal 💻",
-      content: "Run bash commands, compile code, test applications, or interact with Git right from the browser.",
+      content:
+        "Run bash commands, compile code, test applications, or interact with Git right from the browser.",
       placement: "top",
     },
   ];

@@ -21,6 +21,7 @@ from .views import (
     UserListView,
     UserStatisticsView,
     UserSuggestionsView,
+    PublicProfileView,
 )
 
 urlpatterns = [
@@ -59,4 +60,5 @@ urlpatterns = [
         "magic-link/request/", MagicLinkRequestView.as_view(), name="magic-link-request"
     ),
     path("magic-link/verify/", MagicLinkVerifyView.as_view(), name="magic-link-verify"),
+    path("profile/<str:username>/", PublicProfileView.as_view(), name="public-profile"),
 ]

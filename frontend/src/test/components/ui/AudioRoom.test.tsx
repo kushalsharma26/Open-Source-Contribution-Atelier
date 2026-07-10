@@ -42,8 +42,12 @@ describe("AudioRoom Component", () => {
       addIceCandidate: vi.fn().mockResolvedValue(undefined),
       close: vi.fn(),
     };
-    global.RTCPeerConnection = vi.fn().mockImplementation(() => mockPeerConnection) as any;
-    global.RTCSessionDescription = vi.fn().mockImplementation((desc) => desc) as any;
+    global.RTCPeerConnection = vi
+      .fn()
+      .mockImplementation(() => mockPeerConnection) as any;
+    global.RTCSessionDescription = vi
+      .fn()
+      .mockImplementation((desc) => desc) as any;
     global.RTCIceCandidate = vi.fn().mockImplementation((cand) => cand) as any;
   });
 
@@ -135,7 +139,10 @@ describe("AudioRoom Component", () => {
       expect(mockPeerConnection.createOffer).toHaveBeenCalled();
       expect(mockPeerConnection.setLocalDescription).toHaveBeenCalled();
       expect(mockWebSocket.send).toHaveBeenCalledWith(
-        JSON.stringify({ action: "offer", data: { type: "offer", sdp: "sdp" } })
+        JSON.stringify({
+          action: "offer",
+          data: { type: "offer", sdp: "sdp" },
+        }),
       );
     });
   });

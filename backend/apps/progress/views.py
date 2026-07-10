@@ -99,11 +99,13 @@ class MyProgressView(APIView):
             "score": base_score,
             "completed": completed,
             "idempotency_key": idempotency_key,
-            "client_timestamp": client_timestamp_ms
+            "client_timestamp": client_timestamp_ms,
         }
-        
-        buffered = ProgressBufferService.buffer_update(request.user.id, lesson_slug, payload)
-        
+
+        buffered = ProgressBufferService.buffer_update(
+            request.user.id, lesson_slug, payload
+        )
+
         if buffered:
             # Return accepted response with optimistic in-memory model
             progress = LessonProgress(
@@ -1034,20 +1036,47 @@ class BufferMetricsView(APIView):
 
     def get(self, request):
         from apps.progress.services.progress_buffer import ProgressBufferService
-        
+
         metrics = ProgressBufferService.get_queue_metrics()
-        
+
         # Calculate some derived metrics
         total_queued = metrics.get("total_queued", 0)
         total_processed = metrics.get("total_processed", 0)
-        
+
         success_rate = 100.0
         if total_queued > 0:
             success_rate = round((total_processed / total_queued) * 100, 2)
-            
+
         metrics["success_rate_percent"] = success_rate
-        
-        return Response({
-            "success": True,
-            "metrics": metrics
-        })
+
+        return Response({"success": True, "metrics": metrics})
+
+
+class HeatmapView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from django.contrib.auth.models import User
+        from django.shortcuts import get_object_or_404
+        from apps.progress.models import DailyActivity
+        import datetime
+
+        username = request.query_params.get("username")
+        if username:
+            user = get_object_or_404(User, username=username)
+        else:
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication credentials were not provided."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            user = request.user
+
+        one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
+        activities = DailyActivity.objects.filter(user=user, date__gte=one_year_ago)
+
+        data = []
+        for act in activities:
+            data.append({"date": act.date.isoformat(), "count": 1})
+
+        return Response(data, status=status.HTTP_200_OK)

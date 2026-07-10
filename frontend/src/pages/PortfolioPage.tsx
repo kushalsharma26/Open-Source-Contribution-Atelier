@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchApi } from "../lib/api";
 
-
-
 interface Template {
   id: number;
   name: string;
@@ -87,7 +85,6 @@ export default function PortfolioPage() {
     }
   };
 
-
   if (loading) {
     return <div className="p-8">Loading...</div>;
   }
@@ -99,7 +96,8 @@ export default function PortfolioPage() {
           Developer Portfolio Generator
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Generate a professional, multi-page portfolio highlighting your achievements, stats, and badges on the platform.
+          Generate a professional, multi-page portfolio highlighting your
+          achievements, stats, and badges on the platform.
         </p>
       </div>
 
@@ -107,14 +105,16 @@ export default function PortfolioPage() {
         {/* Configuration Panel */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 space-y-6">
           <h2 className="text-xl font-semibold">Configuration</h2>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Format</label>
-              <select 
+              <select
                 className="w-full p-2 border rounded-md dark:bg-gray-900 dark:border-gray-600"
-                value={selectedFormat} 
-                onChange={e => setSelectedFormat(e.target.value as "pdf" | "html")}
+                value={selectedFormat}
+                onChange={(e) =>
+                  setSelectedFormat(e.target.value as "pdf" | "html")
+                }
               >
                 <option value="pdf">PDF</option>
                 <option value="html">HTML</option>
@@ -122,18 +122,44 @@ export default function PortfolioPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Sections to Include</label>
+              <label className="block text-sm font-medium mb-1">
+                Sections to Include
+              </label>
               <div className="space-y-2 mt-2">
                 <label className="flex items-center space-x-2">
-                  <input type="checkbox" checked={sections.badges} onChange={e => setSections({...sections, badges: e.target.checked})} className="rounded text-blue-500" />
+                  <input
+                    type="checkbox"
+                    checked={sections.badges}
+                    onChange={(e) =>
+                      setSections({ ...sections, badges: e.target.checked })
+                    }
+                    className="rounded text-blue-500"
+                  />
                   <span>Badges & Achievements</span>
                 </label>
                 <label className="flex items-center space-x-2">
-                  <input type="checkbox" checked={sections.certificates} onChange={e => setSections({...sections, certificates: e.target.checked})} className="rounded text-blue-500" />
+                  <input
+                    type="checkbox"
+                    checked={sections.certificates}
+                    onChange={(e) =>
+                      setSections({
+                        ...sections,
+                        certificates: e.target.checked,
+                      })
+                    }
+                    className="rounded text-blue-500"
+                  />
                   <span>Certificates</span>
                 </label>
                 <label className="flex items-center space-x-2">
-                  <input type="checkbox" checked={sections.stats} onChange={e => setSections({...sections, stats: e.target.checked})} className="rounded text-blue-500" />
+                  <input
+                    type="checkbox"
+                    checked={sections.stats}
+                    onChange={(e) =>
+                      setSections({ ...sections, stats: e.target.checked })
+                    }
+                    className="rounded text-blue-500"
+                  />
                   <span>Platform Statistics</span>
                 </label>
               </div>
@@ -152,24 +178,30 @@ export default function PortfolioPage() {
         {/* History Panel */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <h2 className="text-xl font-semibold mb-4">Generated Reports</h2>
-          
+
           {portfolios.length === 0 ? (
             <div className="text-gray-500 text-center py-8">
               No reports generated yet.
             </div>
           ) : (
             <div className="space-y-4">
-              {portfolios.map(port => (
-                <div key={port.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750 rounded-lg border border-gray-100 dark:border-gray-600">
+              {portfolios.map((port) => (
+                <div
+                  key={port.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750 rounded-lg border border-gray-100 dark:border-gray-600"
+                >
                   <div>
-                    <div className="font-medium">Portfolio ({port.format.toUpperCase()})</div>
+                    <div className="font-medium">
+                      Portfolio ({port.format.toUpperCase()})
+                    </div>
                     <div className="text-sm text-gray-500">
-                      {new Date(port.created_at).toLocaleDateString()} • {port.status}
+                      {new Date(port.created_at).toLocaleDateString()} •{" "}
+                      {port.status}
                     </div>
                   </div>
                   <div>
                     {port.status === "completed" && (
-                      <button 
+                      <button
                         onClick={() => handleDownload(port.id)}
                         className="text-sm px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 rounded-md transition-colors"
                       >
@@ -177,10 +209,15 @@ export default function PortfolioPage() {
                       </button>
                     )}
                     {port.status === "failed" && (
-                      <span className="text-xs text-red-500 bg-red-100 px-2 py-1 rounded">Failed</span>
+                      <span className="text-xs text-red-500 bg-red-100 px-2 py-1 rounded">
+                        Failed
+                      </span>
                     )}
-                    {port.status === "pending" || port.status === "processing" ? (
-                      <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Processing...</span>
+                    {port.status === "pending" ||
+                    port.status === "processing" ? (
+                      <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+                        Processing...
+                      </span>
                     ) : null}
                   </div>
                 </div>

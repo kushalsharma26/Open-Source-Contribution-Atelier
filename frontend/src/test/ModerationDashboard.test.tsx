@@ -40,11 +40,11 @@ describe("ModerationDashboard", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <ModerationDashboard />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     expect(
-      await screen.findByText(/moderation dashboard/i)
+      await screen.findByText(/moderation dashboard/i),
     ).toBeInTheDocument();
 
     // Wait for report to appear
@@ -65,7 +65,9 @@ describe("ModerationDashboard", () => {
 
     const calls = fetchApiSpy.mock.calls;
     // One call is for fetching, one for action
-    const actionCall = calls.find((c) => String(c[0]).includes("/moderation/reports/1/action/"));
+    const actionCall = calls.find((c) =>
+      String(c[0]).includes("/moderation/reports/1/action/"),
+    );
     expect(actionCall).toBeTruthy();
 
     const [endpoint, options] = actionCall as [string, any];
@@ -76,4 +78,3 @@ describe("ModerationDashboard", () => {
     expect(body).toEqual({ status: "APPROVED" });
   });
 });
-

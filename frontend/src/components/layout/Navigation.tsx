@@ -117,7 +117,7 @@ export function Navigation() {
         const totalResults = results.lessons.length + results.challenges.length;
         api
           .post("/search/track/", { query, result_count: totalResults })
-          .catch(() => { });
+          .catch(() => {});
       } else {
         setSearchResults(null);
       }
@@ -214,7 +214,9 @@ export function Navigation() {
       <header className="fixed inset-x-0 top-0 z-30 border-b border-outline bg-white lg:left-[280px] dark:border-[#2e2924] dark:bg-[#0f0e0c]">
         <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <button
-            onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden rounded-lg border-2 border-black p-2">
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="lg:hidden rounded-lg border-2 border-black p-2"
+          >
             <Menu size={22} />
           </button>
           <div className="flex min-w-0 items-center gap-3 relative grow max-w-md">
@@ -327,10 +329,11 @@ export function Navigation() {
               {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
             </button>
             <button
-              className={`rounded-lg p-2 border-2 border-black dark:border-[#2e2924] shadow-card-sm hover:-translate-y-0.5 active:translate-y-0 transition-all ${theme === "high-contrast"
-                ? "bg-primary text-white"
-                : "bg-surface-low text-muted hover:text-text dark:bg-[#151411] dark:text-[#c4bbae] dark:hover:text-[#f0ebe2]"
-                }`}
+              className={`rounded-lg p-2 border-2 border-black dark:border-[#2e2924] shadow-card-sm hover:-translate-y-0.5 active:translate-y-0 transition-all ${
+                theme === "high-contrast"
+                  ? "bg-primary text-white"
+                  : "bg-surface-low text-muted hover:text-text dark:bg-[#151411] dark:text-[#c4bbae] dark:hover:text-[#f0ebe2]"
+              }`}
               onClick={() =>
                 setTheme(theme === "high-contrast" ? "light" : "high-contrast")
               }
@@ -378,37 +381,25 @@ export function Navigation() {
       </header>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 lg:hidden">
-
           <div className="absolute left-0 top-0 h-full w-72 bg-white dark:bg-[#151411] p-6">
-
             <div className="space-y-2">
-
               {navItems.map((item) => {
-
                 const Icon = item.icon;
 
                 return (
-
                   <NavLink
                     key={item.to}
                     to={item.to}
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-gray-100"
                   >
-
                     <Icon size={18} />
                     {item.label}
-
                   </NavLink>
-
                 );
-
               })}
-
             </div>
-
           </div>
-
         </div>
       )}
     </>

@@ -1177,3 +1177,48 @@ class LearningPathView(APIView):
             recommended = max(scored_modules, key=lambda m: m["score"])
 
         return Response({"modules": scored_modules, "next_step": recommended})
+
+
+class PublicProfileView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, username):
+        from django.contrib.auth.models import User
+        from django.shortcuts import get_object_or_404
+        from django.db.models import Sum
+        from apps.progress.models import UserBadge, LessonProgress
+        from apps.progress.serializers import UserBadgeSerializer
+        from apps.accounts.serializers import UserListSerializer
+
+        user = get_object_or_404(User, username=username)
+
+        # User details
+        user_serializer = UserListSerializer(user, context={"request": request})
+
+        # Badges
+        earned_badges = (
+            UserBadge.objects.filter(user=user)
+            .select_related("badge")
+            .order_by("-earned_at")
+        )
+        badge_serializer = UserBadgeSerializer(earned_badges, many=True)
+
+        # Progress stats
+        total_score = (
+            LessonProgress.objects.filter(user=user).aggregate(total=Sum("score"))[
+                "total"
+            ]
+            or 0
+        )
+        completed_lessons = LessonProgress.objects.filter(
+            user=user, completed=True
+        ).count()
+
+        return Response(
+            {
+                "user": user_serializer.data,
+                "badges": badge_serializer.data,
+                "total_score": total_score,
+                "completed_lessons": completed_lessons,
+            }
+        )

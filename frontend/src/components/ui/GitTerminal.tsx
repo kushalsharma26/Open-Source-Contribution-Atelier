@@ -147,7 +147,6 @@ export function GitTerminal({
     }
 
     if (showSuggestions && suggestions.length > 0) {
-
       if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedIndex((prev) =>
@@ -210,7 +209,6 @@ export function GitTerminal({
         }
       }}
     >
-
       {/* ── Title bar ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-2 bg-[#1a1a2e] border-b-4 border-black dark:border-[#2e2924]">
         <div className="flex items-center gap-3">
@@ -372,7 +370,6 @@ export function GitTerminal({
             id="git-terminal-input"
             aria-label="Git terminal input"
             className="flex-1 bg-transparent font-mono text-sm text-white outline-none placeholder:text-gray-600 caret-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f0f1d] focus-visible:outline-none"
-
             placeholder={
               completed
                 ? "✅ Objective done – try more commands freely!"

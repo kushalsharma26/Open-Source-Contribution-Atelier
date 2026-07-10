@@ -23,7 +23,7 @@ export async function enqueueOfflineAction(
   headers: Record<string, string>,
   body: Record<string, any> | string,
   type: string,
-  slugOrId: string
+  slugOrId: string,
 ) {
   const id = `${type}-${slugOrId}`;
   const API_BASE =
@@ -59,7 +59,7 @@ export async function enqueueOfflineAction(
   // 2. Mirror to localStorage
   try {
     const pending = JSON.parse(
-      localStorage.getItem("atelier_pending_sync") || "[]"
+      localStorage.getItem("atelier_pending_sync") || "[]",
     );
     const exists = pending.some((p: any) => p.id === id);
     if (!exists) {
@@ -85,7 +85,7 @@ export async function enqueueOfflineAction(
           sync: { register: (tag: string) => Promise<void> };
         }
         await (reg as ServiceWorkerRegistrationWithSync).sync.register(
-          "sync-progress"
+          "sync-progress",
         );
       }
       if (navigator.serviceWorker.controller) {
@@ -96,7 +96,7 @@ export async function enqueueOfflineAction(
     } catch (err) {
       console.warn(
         "[OfflineQueue] Service worker sync registration failed/unsupported:",
-        err
+        err,
       );
     }
   }

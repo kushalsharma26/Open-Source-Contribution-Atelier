@@ -1,5 +1,5 @@
-import React from 'react';
-import './SearchHistoryDropdown.css';
+import React from "react";
+import "./SearchHistoryDropdown.css";
 
 interface SearchHistoryDropdownProps {
   history: string[];

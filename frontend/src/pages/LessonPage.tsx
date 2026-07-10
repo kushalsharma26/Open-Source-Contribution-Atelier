@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { GitTerminal } from '../components/GitTerminal';
+import { GitTerminal } from "../components/GitTerminal";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import {
   ChevronLeft,
@@ -18,8 +18,10 @@ import { useUserProgress } from "../hooks/useUserProgress";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { fetchApi } from "../lib/api";
 import { Lesson, fetchLessonsApi, fetchLessonContent } from "../lib/lessons";
-const RichTextEditor = React.lazy(
-  () => import("../components/ui/RichTextEditor").then((mod) => ({ default: mod.RichTextEditor }))
+const RichTextEditor = React.lazy(() =>
+  import("../components/ui/RichTextEditor").then((mod) => ({
+    default: mod.RichTextEditor,
+  })),
 );
 
 const MarkdownRenderer = React.lazy(() =>
@@ -31,12 +33,16 @@ import { GitGraph } from "../components/ui/GitGraph";
 import { NotePanel } from "../components/ui/NotePanel";
 import { LessonFeedbackWidget } from "../components/ui/LessonFeedbackWidget";
 import { PythonSandbox } from "../components/ui/PythonSandbox";
-const CollabPythonSandbox = React.lazy(
-  () => import("../components/ui/CollabPythonSandbox").then((mod) => ({ default: mod.CollabPythonSandbox }))
+const CollabPythonSandbox = React.lazy(() =>
+  import("../components/ui/CollabPythonSandbox").then((mod) => ({
+    default: mod.CollabPythonSandbox,
+  })),
 );
 import { JSSandbox } from "../components/ui/JSSandbox";
-const InteractiveDebugger = React.lazy(
-  () => import("../components/ui/InteractiveDebugger").then((mod) => ({ default: mod.InteractiveDebugger }))
+const InteractiveDebugger = React.lazy(() =>
+  import("../components/ui/InteractiveDebugger").then((mod) => ({
+    default: mod.InteractiveDebugger,
+  })),
 );
 import { TextToSpeechControls } from "../components/ui/TextToSpeechControls";
 import { ReadingProgressTracker } from "../components/ui/ReadingProgressTracker";
@@ -722,41 +728,41 @@ export function LessonPage() {
                       </span>
                     </div>
 
-                  <h3>💻 Git Sandbox</h3>
-                  <p>Try Git commands in this interactive terminal:</p>
-                  <GitTerminal />
+                    <h3>💻 Git Sandbox</h3>
+                    <p>Try Git commands in this interactive terminal:</p>
+                    <GitTerminal />
 
-                  <h3 className="text-lg font-black mb-4 text-text dark:text-[#f0ebe2]">
-                    {lesson.quizzes![currentQuizIndex].question}
-                  </h3>
+                    <h3 className="text-lg font-black mb-4 text-text dark:text-[#f0ebe2]">
+                      {lesson.quizzes![currentQuizIndex].question}
+                    </h3>
 
-                  <div className="space-y-3">
-                    {lesson.quizzes![currentQuizIndex].options.map(
-                      (option, idx) => {
-                        const isSelected = selectedOption === idx;
-                        const currentQuiz = lesson.quizzes![currentQuizIndex];
-                        const isCorrectOption = idx === currentQuiz.answer;
+                    <div className="space-y-3">
+                      {lesson.quizzes![currentQuizIndex].options.map(
+                        (option, idx) => {
+                          const isSelected = selectedOption === idx;
+                          const currentQuiz = lesson.quizzes![currentQuizIndex];
+                          const isCorrectOption = idx === currentQuiz.answer;
 
-                        // Determine background color based on quiz state
-                        let bgColor = "";
-                        if (quizFeedback !== null) {
-                          // After answer submitted: show green for correct, red for incorrect
-                          if (isCorrectOption) {
-                            bgColor =
-                              "bg-green-600 border-green-800 text-white";
-                          } else if (
-                            isSelected &&
-                            quizFeedback === "incorrect"
-                          ) {
-                            bgColor = "bg-red-600 border-red-800 text-white";
+                          // Determine background color based on quiz state
+                          let bgColor = "";
+                          if (quizFeedback !== null) {
+                            // After answer submitted: show green for correct, red for incorrect
+                            if (isCorrectOption) {
+                              bgColor =
+                                "bg-green-600 border-green-800 text-white";
+                            } else if (
+                              isSelected &&
+                              quizFeedback === "incorrect"
+                            ) {
+                              bgColor = "bg-red-600 border-red-800 text-white";
+                            }
                           }
-                        }
 
-                        if (!bgColor) {
-                          bgColor = isSelected
-                            ? "bg-accent shadow-card-sm -translate-y-0.5"
-                            : "bg-surface hover:bg-surface-low dark:bg-[#151411]";
-                        }
+                          if (!bgColor) {
+                            bgColor = isSelected
+                              ? "bg-accent shadow-card-sm -translate-y-0.5"
+                              : "bg-surface hover:bg-surface-low dark:bg-[#151411]";
+                          }
 
                           return (
                             <button

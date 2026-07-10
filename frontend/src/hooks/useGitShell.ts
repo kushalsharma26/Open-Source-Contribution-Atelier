@@ -153,47 +153,77 @@ export function runCommand(
   const cmd = argv[0]?.toLowerCase() ?? "";
 
   // DELEGATE FS COMMANDS TO NEW VFS PARSER
-  if (['pwd', 'cd', 'ls', 'mkdir', 'touch', 'echo', 'cat', 'rm', 'cp', 'mv', 'clear'].includes(cmd)) {
+  if (
+    [
+      "pwd",
+      "cd",
+      "ls",
+      "mkdir",
+      "touch",
+      "echo",
+      "cat",
+      "rm",
+      "cp",
+      "mv",
+      "clear",
+    ].includes(cmd)
+  ) {
     const vfsResult = CommandParser.parse(trimmed, state.vfs);
-    
+
     // Convert VFS TerminalLines to GitTerminalLines
-    const lines = vfsResult.lines.map(l => ({ ...l, id: nextId() }));
-    
+    const lines = vfsResult.lines.map((l) => ({ ...l, id: nextId() }));
+
     if (cmd === "clear") {
-      return { lines, newState: { ...s, vfs: vfsResult.newState, cwd: vfsResult.newState.cwd, fs: VfsAdapter.toFlat(vfsResult.newState) as any } };
+      return {
+        lines,
+        newState: {
+          ...s,
+          vfs: vfsResult.newState,
+          cwd: vfsResult.newState.cwd,
+          fs: VfsAdapter.toFlat(vfsResult.newState) as any,
+        },
+      };
     }
-    
-    return { 
-      lines, 
-      newState: { 
-        ...s, 
-        vfs: vfsResult.newState, 
-        cwd: vfsResult.newState.cwd, 
-        fs: VfsAdapter.toFlat(vfsResult.newState) as any 
-      } 
+
+    return {
+      lines,
+      newState: {
+        ...s,
+        vfs: vfsResult.newState,
+        cwd: vfsResult.newState.cwd,
+        fs: VfsAdapter.toFlat(vfsResult.newState) as any,
+      },
     };
   }
 
   // ── nano / edit ──
   if (cmd === "nano" || cmd === "edit") {
     const name = argv[1];
-    if (!name) return { lines: [out(`Usage: ${cmd} <filename>`, "error")], newState: s };
-    
+    if (!name)
+      return { lines: [out(`Usage: ${cmd} <filename>`, "error")], newState: s };
+
     const resolved = VirtualFileSystem.resolvePath(state.vfs.cwd, name);
     const node = VirtualFileSystem.getNode(state.vfs, resolved);
-    
+
     let fileContent = "";
     if (node) {
-      if (node.type !== "file") return { lines: [out(`${cmd}: ${name} is a directory`, "error")], newState: s };
+      if (node.type !== "file")
+        return {
+          lines: [out(`${cmd}: ${name} is a directory`, "error")],
+          newState: s,
+        };
       fileContent = (node as any).content;
     }
-    
+
     return {
       lines: [],
-      newState: { ...s, editorState: { file: resolved.join("/"), content: fileContent } }
+      newState: {
+        ...s,
+        editorState: { file: resolved.join("/"), content: fileContent },
+      },
     };
   }
-  
+
   // ── help ──
   if (cmd === "help") {
     const helpText = [
@@ -651,7 +681,11 @@ export function runCommand(
         const prefix = cwdKey(s.cwd) + "/";
         const conflictKey = prefix + "app.js";
         const conflictContent = `<<<<<<< HEAD\nconsole.log("Main branch initialized");\n=======\nconsole.log("Feature branch initialized");\n>>>>>>> conflict-branch\n`;
-        const newVfs = VirtualFileSystem.write(s.vfs, conflictKey, conflictContent);
+        const newVfs = VirtualFileSystem.write(
+          s.vfs,
+          conflictKey,
+          conflictContent,
+        );
         const newUnmerged = { ...(s.git.unmerged || {}), [conflictKey]: true };
 
         return {
@@ -763,7 +797,7 @@ export interface UseGitShellOptions {
 import { useEffect as UseEffectAlias } from "react";
 export function useGitShell(options: UseGitShellOptions = {}) {
   const [shellState, setShellState] = useState<ShellState>(makeInitialState);
-  
+
   UseEffectAlias(() => {
     VfsPersistence.save(shellState.vfs);
   }, [shellState.vfs]);
@@ -857,11 +891,11 @@ export function useGitShell(options: UseGitShellOptions = {}) {
       if (!prev.editorState) return prev;
       const fileKey = prev.editorState.file;
       const newVfs = VirtualFileSystem.write(prev.vfs, fileKey, content);
-      return { 
-        ...prev, 
-        vfs: newVfs, 
-        fs: VfsAdapter.toFlat(newVfs) as any, 
-        editorState: null 
+      return {
+        ...prev,
+        vfs: newVfs,
+        fs: VfsAdapter.toFlat(newVfs) as any,
+        editorState: null,
       };
     });
   }, []);

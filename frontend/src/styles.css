@@ -717,7 +717,7 @@ html.high-contrast [tabindex]:focus-visible {
     gap: 12px !important;
     width: 100% !important;
   }
-  
+
   .button-group button,
   .cta-buttons button,
   .auth-buttons button,

@@ -23,11 +23,13 @@ from .views import (
     QuizNonceView,  # NEW: Imported the Nonce View
     LeaderboardView,
     BufferMetricsView,
+    HeatmapView,
 )
 
 urlpatterns = [
     path("leaderboard/", LeaderboardView.as_view(), name="leaderboard"),
     path("buffer-metrics/", BufferMetricsView.as_view(), name="buffer-metrics"),
+    path("heatmap/", HeatmapView.as_view(), name="heatmap"),
     path("export/pdf/", UserProgressPDFExportView.as_view(), name="export-pdf"),
     path("badges/", BadgeListView.as_view(), name="badges"),
     path("me/", MyProgressView.as_view(), name="my-progress"),

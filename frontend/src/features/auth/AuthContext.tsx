@@ -1,6 +1,11 @@
 // @refresh reset
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { checkUser, loginTokens, logoutAction } from "./authSlice";
 
@@ -33,7 +38,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  const { user, isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, isLoading } = useAppSelector(
+    (state) => state.auth,
+  );
 
   const login = (tokens: { access: string; refresh: string }) => {
     dispatch(loginTokens(tokens));

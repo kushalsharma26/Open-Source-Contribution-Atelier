@@ -27,12 +27,19 @@ export function AchievementCardModal({
     const scale = 2; // For retina displays
     canvas.width = 800 * scale;
     canvas.height = 450 * scale;
-    
+
     // Scale context
     ctx.scale(scale, scale);
 
     // Helper for drawing neo-brutalist boxes
-    const drawBox = (x: number, y: number, w: number, h: number, bg: string, shadowOffset = 6) => {
+    const drawBox = (
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      bg: string,
+      shadowOffset = 6,
+    ) => {
       // Shadow
       ctx.fillStyle = "#000000";
       ctx.fillRect(x + shadowOffset, y + shadowOffset, w, h);
@@ -48,7 +55,7 @@ export function AchievementCardModal({
     // Background
     ctx.fillStyle = "#f0ebe2"; // Off-white
     ctx.fillRect(0, 0, 800, 450);
-    
+
     // Main Border
     ctx.lineWidth = 12;
     ctx.strokeStyle = "#000000";
@@ -57,7 +64,7 @@ export function AchievementCardModal({
     // Decorative shapes
     drawBox(650, 40, 100, 100, "#FFEBC2"); // Yellow box
     drawBox(700, 90, 60, 60, "#c3c0ff"); // Purple box
-    
+
     // Header text
     ctx.fillStyle = "#000000";
     ctx.font = "900 48px sans-serif";
@@ -69,13 +76,19 @@ export function AchievementCardModal({
     ctx.fillText(`@${username}`, 50, 150);
 
     // Stats Grid
-    const statBox = (x: number, y: number, label: string, value: string, color: string) => {
+    const statBox = (
+      x: number,
+      y: number,
+      label: string,
+      value: string,
+      color: string,
+    ) => {
       drawBox(x, y, 150, 120, color);
-      
+
       ctx.fillStyle = "#000000";
       ctx.font = "800 16px sans-serif";
       ctx.fillText(label.toUpperCase(), x + 20, y + 40);
-      
+
       ctx.font = "900 42px sans-serif";
       ctx.fillText(value, x + 20, y + 90);
     };
@@ -88,8 +101,11 @@ export function AchievementCardModal({
     // Footer
     ctx.fillStyle = "#000000";
     ctx.font = "700 16px sans-serif";
-    ctx.fillText("Join the Open Source Atelier - github.com/diksha78dev/Open-Source-Contribution-Atelier", 50, 400);
-
+    ctx.fillText(
+      "Join the Open Source Atelier - github.com/diksha78dev/Open-Source-Contribution-Atelier",
+      50,
+      400,
+    );
   }, [isOpen, personalStats, username]);
 
   const downloadImage = () => {

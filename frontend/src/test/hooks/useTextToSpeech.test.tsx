@@ -91,7 +91,7 @@ describe("useTextToSpeech", () => {
   it("should load settings from localStorage", () => {
     localStorageMock.setItem(
       "tts_settings",
-      JSON.stringify({ rate: 1.5, pitch: 1.2, volume: 0.8, voiceURI: "uri2" })
+      JSON.stringify({ rate: 1.5, pitch: 1.2, volume: 0.8, voiceURI: "uri2" }),
     );
     const { result } = renderHook(() => useTextToSpeech("Test text"));
     expect(result.current.settings.rate).toBe(1.5);
@@ -105,7 +105,9 @@ describe("useTextToSpeech", () => {
       result.current.setSettings({ rate: 2.0 });
     });
     expect(result.current.settings.rate).toBe(2.0);
-    expect(JSON.parse(localStorageMock.getItem("tts_settings") || "{}").rate).toBe(2.0);
+    expect(
+      JSON.parse(localStorageMock.getItem("tts_settings") || "{}").rate,
+    ).toBe(2.0);
   });
 
   it("should play text with current settings", () => {
@@ -167,7 +169,7 @@ describe("useTextToSpeech", () => {
     });
     const { result } = renderHook(() => useTextToSpeech("Hello"));
     expect(result.current.isSupported).toBe(false);
-    
+
     act(() => {
       result.current.play(); // Should not throw
     });
@@ -197,7 +199,9 @@ describe("useTextToSpeech", () => {
   // EDGE CASES
 
   it("should strip markdown effectively before speaking", () => {
-    const { result } = renderHook(() => useTextToSpeech("## Hello **World**\n\n> This is a quote."));
+    const { result } = renderHook(() =>
+      useTextToSpeech("## Hello **World**\n\n> This is a quote."),
+    );
     act(() => {
       result.current.play();
     });
@@ -206,15 +210,17 @@ describe("useTextToSpeech", () => {
   });
 
   it("should do nothing if text strips down to empty string", () => {
-    const { result } = renderHook(() => useTextToSpeech("```\ncode\n```\n![image](url)"));
+    const { result } = renderHook(() =>
+      useTextToSpeech("```\ncode\n```\n![image](url)"),
+    );
     act(() => {
       result.current.play();
     });
-    
+
     // The play function returns early if cleanText is empty, so speak shouldn't be called if it strips away entirely,
     // wait, "```\ncode\n```" strips to "Code block omitted.", so it's not empty!
     // Let's test actual empty markdown
-    
+
     const { result: emptyResult } = renderHook(() => useTextToSpeech("   "));
     mockSpeak.mockClear();
     act(() => {
@@ -236,7 +242,7 @@ describe("useTextToSpeech", () => {
   it("should select user specified voice if it exists", () => {
     localStorageMock.setItem(
       "tts_settings",
-      JSON.stringify({ voiceURI: "uri3" })
+      JSON.stringify({ voiceURI: "uri3" }),
     );
     const { result } = renderHook(() => useTextToSpeech("Hello"));
     act(() => {
@@ -249,7 +255,7 @@ describe("useTextToSpeech", () => {
   it("should fallback to premium or standard voice if user specified voice is missing", () => {
     localStorageMock.setItem(
       "tts_settings",
-      JSON.stringify({ voiceURI: "missing-uri" })
+      JSON.stringify({ voiceURI: "missing-uri" }),
     );
     const { result } = renderHook(() => useTextToSpeech("Hello"));
     act(() => {
@@ -266,7 +272,9 @@ describe("useTextToSpeech", () => {
       result.current.playPreview();
     });
     const utteranceCall = mockSpeak.mock.calls[0][0];
-    expect(utteranceCall.text).toBe("This is a preview of the selected voice and settings.");
+    expect(utteranceCall.text).toBe(
+      "This is a preview of the selected voice and settings.",
+    );
   });
 
   it("should handle error gracefully without breaking state", () => {
@@ -274,9 +282,9 @@ describe("useTextToSpeech", () => {
     act(() => {
       result.current.play();
     });
-    
+
     const utteranceCall = mockSpeak.mock.calls[0][0];
-    
+
     act(() => {
       // simulate an error from SpeechSynthesis
       if (utteranceCall.onerror) {

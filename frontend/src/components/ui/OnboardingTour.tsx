@@ -111,7 +111,11 @@ function CustomTooltip({
   );
 }
 
-export function OnboardingTour({ run, onFinish, steps: providedSteps }: OnboardingTourProps) {
+export function OnboardingTour({
+  run,
+  onFinish,
+  steps: providedSteps,
+}: OnboardingTourProps) {
   const defaultSteps: Step[] = [
     {
       target: "#tour-welcome",

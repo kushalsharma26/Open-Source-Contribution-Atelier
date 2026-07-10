@@ -86,7 +86,9 @@ export function TextToSpeechControls({ content }: TextToSpeechControlsProps) {
       {showSettings && (
         <div className="absolute top-full left-0 mt-3 p-4 bg-white border-4 border-black rounded-xl shadow-card w-80 z-50 dark:bg-[#1a1814] dark:border-[#2e2924]">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-lg dark:text-[#f0ebe2]">Voice Settings</h3>
+            <h3 className="font-bold text-lg dark:text-[#f0ebe2]">
+              Voice Settings
+            </h3>
             <button
               onClick={() => setShowSettings(false)}
               className="p-1 hover:bg-gray-100 rounded-md dark:hover:bg-[#2e2924]"
@@ -97,7 +99,9 @@ export function TextToSpeechControls({ content }: TextToSpeechControlsProps) {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold mb-1 dark:text-[#f0ebe2]">Voice</label>
+              <label className="block text-sm font-semibold mb-1 dark:text-[#f0ebe2]">
+                Voice
+              </label>
               <select
                 className="w-full p-2 border-2 border-black rounded-lg bg-white dark:bg-[#1f1c18] dark:text-[#f0ebe2] dark:border-[#4a443b] focus:ring-2 focus:ring-accent outline-none"
                 value={settings.voiceURI || ""}
@@ -123,7 +127,9 @@ export function TextToSpeechControls({ content }: TextToSpeechControlsProps) {
                 max="2"
                 step="0.1"
                 value={settings.rate}
-                onChange={(e) => setSettings({ rate: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setSettings({ rate: parseFloat(e.target.value) })
+                }
                 className="w-full accent-black dark:accent-accent"
               />
             </div>
@@ -139,7 +145,9 @@ export function TextToSpeechControls({ content }: TextToSpeechControlsProps) {
                 max="2"
                 step="0.1"
                 value={settings.pitch}
-                onChange={(e) => setSettings({ pitch: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setSettings({ pitch: parseFloat(e.target.value) })
+                }
                 className="w-full accent-black dark:accent-accent"
               />
             </div>
@@ -155,7 +163,9 @@ export function TextToSpeechControls({ content }: TextToSpeechControlsProps) {
                 max="1"
                 step="0.1"
                 value={settings.volume}
-                onChange={(e) => setSettings({ volume: parseFloat(e.target.value) })}
+                onChange={(e) =>
+                  setSettings({ volume: parseFloat(e.target.value) })
+                }
                 className="w-full accent-black dark:accent-accent"
               />
             </div>

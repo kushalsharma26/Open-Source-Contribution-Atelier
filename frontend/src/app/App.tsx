@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 
 import { AppRouter } from "./router";
 import { queryClient } from "../lib/queryClient";
-import { ThemeProvider } from '../context/ThemeContext';
-import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { ThemeProvider } from "../context/ThemeContext";
+import { ThemeToggle } from "../components/ui/ThemeToggle";
 import { CommandPalette } from "../components/CommandPalette";
 import ReportIssueButton from "../components/ui/ReportIssueButton";
 import { NotificationProvider } from "../features/notifications/NotificationContext";
@@ -23,32 +23,43 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="catalog"]',
     title: "📚 Lesson Catalog",
-    content: "Explore specialized modules and select programming or technical practice problems curated for your track.",
+    content:
+      "Explore specialized modules and select programming or technical practice problems curated for your track.",
   },
   {
     target: '[data-tour="dashboard-stats"]',
     title: "📊 Dashboard Standings",
-    content: "Keep track of active active contribution logs, response SLAs, and monitor metrics dynamically.",
+    content:
+      "Keep track of active active contribution logs, response SLAs, and monitor metrics dynamically.",
   },
   {
     target: '[data-tour="achievements"]',
     title: "🏆 Achievements Grid",
-    content: "Track gamified unlocks, collect progress badges, and view active learning milestones directly.",
+    content:
+      "Track gamified unlocks, collect progress badges, and view active learning milestones directly.",
   },
   {
     target: '[data-tour="sandbox"]',
     title: "💻 Interactive Terminal Sandbox",
-    content: "Compile and execute code setups live over isolated runtime workers equipped with multi-theme support.",
+    content:
+      "Compile and execute code setups live over isolated runtime workers equipped with multi-theme support.",
   },
 ];
 
 export function App() {
   const [currentStep, setCurrentStep] = useState<number>(-1);
-  const [coords, setCoords] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   useEffect(() => {
     // Automatically trigger onboarding if no historical tour indicator exists
-    const hasCompletedTour = localStorage.getItem("has-completed-onboarding-tour");
+    const hasCompletedTour = localStorage.getItem(
+      "has-completed-onboarding-tour",
+    );
     if (!hasCompletedTour) {
       setCurrentStep(0);
     }
@@ -56,7 +67,8 @@ export function App() {
     // Custom global event listener allowing configuration resets directly out of settings pages
     const handleRestartTour = () => setCurrentStep(0);
     window.addEventListener("restart-onboarding-tour", handleRestartTour);
-    return () => window.removeEventListener("restart-onboarding-tour", handleRestartTour);
+    return () =>
+      window.removeEventListener("restart-onboarding-tour", handleRestartTour);
   }, []);
 
   useEffect(() => {
@@ -111,7 +123,6 @@ export function App() {
         <ThemeProvider>
           <NotificationProvider>
             <div className="min-h-screen bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-
               {/* Global Toast Configuration */}
               <Toaster
                 position="top-right"
@@ -136,7 +147,7 @@ export function App() {
               {currentStep >= 0 && coords && (
                 <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-50 overflow-hidden">
                   {/* Backdrop highlight layout wrapper */}
-                  <div 
+                  <div
                     className="absolute border-[4px] border-amber-400 bg-black/10 dark:bg-white/5 shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] rounded-lg transition-all duration-300 pointer-events-auto"
                     style={{
                       top: `${coords.top - 6}px`,
@@ -147,7 +158,7 @@ export function App() {
                   />
 
                   {/* Neobrutalist Floating Step Prompt Guide Tooltip */}
-                  <div 
+                  <div
                     className="absolute p-5 bg-white dark:bg-[#1f1c18] border-4 border-black dark:border-[#2e2924] rounded-2xl shadow-card w-80 pointer-events-auto transition-all duration-300"
                     style={{
                       top: `${coords.top + coords.height + 16}px`,
@@ -161,7 +172,7 @@ export function App() {
                       {TOUR_STEPS[currentStep].content}
                     </p>
                     <div className="flex items-center justify-between">
-                      <button 
+                      <button
                         onClick={handleSkip}
                         className="text-xs font-bold text-gray-400 hover:text-black dark:hover:text-white transition"
                       >
@@ -169,18 +180,20 @@ export function App() {
                       </button>
                       <div className="flex gap-1.5">
                         {currentStep > 0 && (
-                          <button 
+                          <button
                             onClick={handleBack}
                             className="px-2.5 py-1 text-xs font-bold border-2 border-black rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-black text-black dark:text-white transition"
                           >
                             Back
                           </button>
                         )}
-                        <button 
+                        <button
                           onClick={handleNext}
                           className="px-3 py-1 text-xs font-black bg-[#ffb5e8] border-2 border-black rounded-md text-black shadow-card-sm hover:-translate-y-0.5 active:translate-y-0 transition-all"
                         >
-                          {currentStep === TOUR_STEPS.length - 1 ? "Finish" : "Next ❯"}
+                          {currentStep === TOUR_STEPS.length - 1
+                            ? "Finish"
+                            : "Next ❯"}
                         </button>
                       </div>
                     </div>
@@ -190,7 +203,6 @@ export function App() {
                   </div>
                 </div>
               )}
-
             </div>
           </NotificationProvider>
         </ThemeProvider>

@@ -103,9 +103,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         if password:
             instance.set_password(password)
-            if hasattr(instance, "profile"):
-                instance.profile.last_password_change = timezone.now()
-                instance.profile.save(update_fields=["last_password_change"])
+            if hasattr(instance, "user_profile"):
+                instance.user_profile.last_password_change = timezone.now()
+                instance.user_profile.save(update_fields=["last_password_change"])
         instance.save()
 
         if (
@@ -117,9 +117,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             or github_url is not None
             or receive_weekly_digest is not None
         ):
-            from apps.accounts.models import UserProfile
+            if hasattr(instance, "user_profile"):
+                profile = instance.user_profile
+            else:
+                profile, _ = UserProfile.objects.get_or_create(user=instance)
 
-            profile, _ = UserProfile.objects.get_or_create(user=instance)
             if avatar is not None:
                 profile.avatar = avatar
             if cover_image is not None:
@@ -135,6 +137,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             if receive_weekly_digest is not None:
                 profile.receive_weekly_digest = receive_weekly_digest
             profile.save()
+            instance.user_profile = profile
 
         return instance
 
@@ -165,44 +168,44 @@ class UserListSerializer(serializers.ModelSerializer):
         )
 
     def get_avatar_url(self, obj):
-        if hasattr(obj, "profile") and obj.profile.avatar:
+        if hasattr(obj, "user_profile") and obj.user_profile.avatar:
             request = self.context.get("request")
             if request:
-                return request.build_absolute_uri(obj.profile.avatar.url)
-            return obj.profile.avatar.url
+                return request.build_absolute_uri(obj.user_profile.avatar.url)
+            return obj.user_profile.avatar.url
         return None
 
     def get_cover_image_url(self, obj):
-        if hasattr(obj, "profile") and obj.profile.cover_image:
+        if hasattr(obj, "user_profile") and obj.user_profile.cover_image:
             request = self.context.get("request")
             if request:
-                return request.build_absolute_uri(obj.profile.cover_image.url)
-            return obj.profile.cover_image.url
+                return request.build_absolute_uri(obj.user_profile.cover_image.url)
+            return obj.user_profile.cover_image.url
         return None
 
     def get_timezone(self, obj):
-        if hasattr(obj, "profile"):
-            return obj.profile.timezone
+        if hasattr(obj, "user_profile"):
+            return obj.user_profile.timezone
         return "UTC"
 
     def get_twitter_url(self, obj):
-        if hasattr(obj, "profile") and obj.profile.twitter_url:
-            return obj.profile.twitter_url
+        if hasattr(obj, "user_profile") and obj.user_profile.twitter_url:
+            return obj.user_profile.twitter_url
         return ""
 
     def get_linkedin_url(self, obj):
-        if hasattr(obj, "profile") and obj.profile.linkedin_url:
-            return obj.profile.linkedin_url
+        if hasattr(obj, "user_profile") and obj.user_profile.linkedin_url:
+            return obj.user_profile.linkedin_url
         return ""
 
     def get_github_url(self, obj):
-        if hasattr(obj, "profile") and obj.profile.github_url:
-            return obj.profile.github_url
+        if hasattr(obj, "user_profile") and obj.user_profile.github_url:
+            return obj.user_profile.github_url
         return ""
 
     def get_receive_weekly_digest(self, obj):
-        if hasattr(obj, "profile"):
-            return obj.profile.receive_weekly_digest
+        if hasattr(obj, "user_profile"):
+            return obj.user_profile.receive_weekly_digest
         return True
 
 
@@ -220,8 +223,8 @@ class EmailOrUsernameTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         result = super().validate(attrs)
 
-        if hasattr(self.user, "profile") and self.user.profile.last_password_change:
-            if timezone.now() > self.user.profile.last_password_change + timedelta(
+        if hasattr(self.user, "user_profile") and self.user.user_profile.last_password_change:
+            if timezone.now() > self.user.user_profile.last_password_change + timedelta(
                 days=90
             ):
                 raise AuthenticationFailed(
