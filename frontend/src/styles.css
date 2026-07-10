@@ -164,7 +164,7 @@ html.dark .bg-accent\/20 {
 
 html.dark .bg-primary\/10,
 html.dark .bg-primary\/20 {
-  background-color: rgb(255 102 92 / 0.20) !important;
+  background-color: rgb(255 102 92 / 0.2) !important;
 }
 
 html.dark .bg-green-100,
@@ -471,6 +471,24 @@ input {
     width: 100%;
     box-shadow: none !important;
     border: none !important;
+  }
+
+  /* Reset dark mode styles for printing */
+  html.dark .certificate-printable,
+  html.dark .certificate-printable * {
+    color: #000000 !important;
+    border-color: #000000 !important;
+  }
+
+  html.dark .certificate-printable {
+    color-scheme: light !important;
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html.dark .certificate-printable.bg-\[\#FFF9F0\] {
+    background-color: #fff9f0 !important;
   }
 
   .no-print {
