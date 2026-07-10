@@ -680,3 +680,46 @@ class BadgeEvaluatorTests(APITestCase):
         ).exists()
         self.assertTrue(has_streak_badge)
 
+
+class StreakEngineTests(APITestCase):
+    """Tests for StreakEngine past and out-of-order activities."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="streaklearner", password="password123"
+        )
+
+    def test_record_activity_consecutive_days_increments_streak(self):
+        from apps.progress.streak_engine import StreakEngine
+        import datetime
+
+        # Day 1 activity
+        res1 = StreakEngine.record_activity(self.user, datetime.date(2026, 7, 10))
+        self.assertEqual(res1["current_streak"], 1)
+
+        # Day 2 consecutive activity
+        res2 = StreakEngine.record_activity(self.user, datetime.date(2026, 7, 11))
+        self.assertEqual(res2["current_streak"], 2)
+
+    def test_record_activity_past_date_does_not_reset_streak(self):
+        from apps.progress.streak_engine import StreakEngine
+        import datetime
+
+        # Day 1 activity
+        res1 = StreakEngine.record_activity(self.user, datetime.date(2026, 7, 10))
+        self.assertEqual(res1["current_streak"], 1)
+
+        # Day 2 consecutive activity
+        res2 = StreakEngine.record_activity(self.user, datetime.date(2026, 7, 11))
+        self.assertEqual(res2["current_streak"], 2)
+
+        # Log activity in the past (e.g. Day 0: 2026-07-09)
+        res3 = StreakEngine.record_activity(self.user, datetime.date(2026, 7, 9))
+        
+        # Streak should still be 2, not reset to 1
+        self.assertEqual(res3["current_streak"], 2)
+        
+        # Profile last activity date should remain the latest date (2026-07-11)
+        profile = StreakEngine.get_or_create_profile(self.user)
+        self.assertEqual(profile.last_activity_date, datetime.date(2026, 7, 11))
+

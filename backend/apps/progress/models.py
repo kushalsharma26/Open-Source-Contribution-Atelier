@@ -10,6 +10,14 @@ from apps.content.models import Exercise, Lesson
 from apps.organizations.models import Organization
 
 
+STREAK_MILESTONES = [
+    {"days": 3, "multiplier": 1.1, "label": "3-Day Streak"},
+    {"days": 7, "multiplier": 1.25, "label": "1-Week Streak"},
+    {"days": 14, "multiplier": 1.5, "label": "2-Week Streak"},
+    {"days": 30, "multiplier": 2.0, "label": "1-Month Streak"},
+]
+
+
 class XPMultiplierEvent(models.Model):
     name = models.CharField(max_length=255)
     multiplier = models.FloatField(default=1.5)
@@ -398,6 +406,15 @@ class StreakProfile(models.Model):
     longest_streak = models.PositiveIntegerField(default=0)
     last_activity_date = models.DateField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def current_multiplier(self) -> float:
+        from apps.progress.streak_engine import StreakEngine
+        return StreakEngine.get_multiplier_for_streak(self.current_streak)
+
+    @current_multiplier.setter
+    def current_multiplier(self, value):
+        pass
 
     class Meta:
         indexes = [
