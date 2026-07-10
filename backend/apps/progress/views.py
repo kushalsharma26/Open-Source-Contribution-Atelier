@@ -72,7 +72,9 @@ class MyProgressView(APIView):
         from apps.progress.services.progress_tracking_service import (
             ProgressTrackingService,
         )
+        from apps.progress.services.progress_buffer import ProgressBufferService
         from django.core.exceptions import ObjectDoesNotExist
+        from apps.content.models import Lesson
 
         lesson_slug = request.data.get("lesson_slug")
         idempotency_key = request.data.get("idempotency_key")
@@ -81,21 +83,50 @@ class MyProgressView(APIView):
         completed = request.data.get("completed", True)
 
         try:
-            progress, created, idempotency_hit = (
-                ProgressTrackingService.record_lesson_progress(
-                    user=request.user,
-                    lesson_slug=lesson_slug,
-                    base_score=base_score,
-                    completed=completed,
-                    idempotency_key=idempotency_key,
-                    client_timestamp_ms=client_timestamp_ms,
-                )
+            lesson = Lesson.objects.get(
+                slug=lesson_slug,
+                organization=request.user.organization,
             )
-        except ObjectDoesNotExist:
+        except Lesson.DoesNotExist:
             return Response(
                 {"error": "Lesson not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        payload = {
+            "user_id": request.user.id,
+            "lesson_slug": lesson_slug,
+            "score": base_score,
+            "completed": completed,
+            "idempotency_key": idempotency_key,
+            "client_timestamp": client_timestamp_ms
+        }
+        
+        buffered = ProgressBufferService.buffer_update(request.user.id, lesson_slug, payload)
+        
+        if buffered:
+            # Return accepted response with optimistic in-memory model
+            progress = LessonProgress(
+                user=request.user,
+                lesson=lesson,
+                completed=completed,
+                base_score=base_score,
+                score=base_score,
+            )
+            serializer = LessonProgressSerializer(progress)
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+        # Fallback to synchronous update if Redis is not available
+        progress, created, idempotency_hit = (
+            ProgressTrackingService.record_lesson_progress(
+                user=request.user,
+                lesson_slug=lesson_slug,
+                base_score=base_score,
+                completed=completed,
+                idempotency_key=idempotency_key,
+                client_timestamp_ms=client_timestamp_ms,
+            )
+        )
 
         serializer = LessonProgressSerializer(progress)
 
@@ -749,6 +780,7 @@ from .serializers import CodeSubmissionSerializer, PeerReviewSerializer
 
 from rest_framework.throttling import ScopedRateThrottle
 
+
 class CodeSubmissionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     throttle_classes = [ScopedRateThrottle]
@@ -928,10 +960,11 @@ class DailyLessonStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        progress_records = LessonProgress.objects.filter(
-            user=request.user,
-            completed=True
-        ).select_related('lesson').order_by('updated_at')
+        progress_records = (
+            LessonProgress.objects.filter(user=request.user, completed=True)
+            .select_related("lesson")
+            .order_by("updated_at")
+        )
 
         # Group by date locally in Python
         stats = {}
@@ -939,13 +972,37 @@ class DailyLessonStatsView(APIView):
             date_str = record.updated_at.date().isoformat()
             if date_str not in stats:
                 stats[date_str] = {
-                    'date': record.updated_at.date(),
-                    'count': 0,
-                    'lessons': []
+                    "date": record.updated_at.date(),
+                    "count": 0,
+                    "lessons": [],
                 }
-            stats[date_str]['count'] += 1
-            stats[date_str]['lessons'].append(record.lesson.title)
+            stats[date_str]["count"] += 1
+            stats[date_str]["lessons"].append(record.lesson.title)
 
-        data = sorted(stats.values(), key=lambda x: x['date'])
+        data = sorted(stats.values(), key=lambda x: x["date"])
         serializer = DailyProgressSerializer(data, many=True)
         return Response(serializer.data)
+
+
+class BufferMetricsView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from apps.progress.services.progress_buffer import ProgressBufferService
+        
+        metrics = ProgressBufferService.get_queue_metrics()
+        
+        # Calculate some derived metrics
+        total_queued = metrics.get("total_queued", 0)
+        total_processed = metrics.get("total_processed", 0)
+        
+        success_rate = 100.0
+        if total_queued > 0:
+            success_rate = round((total_processed / total_queued) * 100, 2)
+            
+        metrics["success_rate_percent"] = success_rate
+        
+        return Response({
+            "success": True,
+            "metrics": metrics
+        })
