@@ -33,7 +33,6 @@ class Migration(migrations.Migration):
                 "ordering": ["-similarity_score"],
             },
         ),
-
         migrations.AlterUniqueTogether(
             name="userbadge",
             unique_together=set(),
@@ -67,10 +66,8 @@ class Migration(migrations.Migration):
                 to="progress.codesubmission",
             ),
         ),
-
         migrations.AlterUniqueTogether(
             name="plagiarismreport",
             unique_together={("submission", "matched_submission")},
         ),
-
     ]

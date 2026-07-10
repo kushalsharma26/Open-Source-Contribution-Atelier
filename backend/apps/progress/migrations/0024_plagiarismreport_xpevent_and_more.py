@@ -13,7 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-
         migrations.CreateModel(
             name="XPEvent",
             fields=[
@@ -69,7 +68,6 @@ class Migration(migrations.Migration):
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
-
         migrations.AddIndex(
             model_name="xpevent",
             index=models.Index(
@@ -80,5 +78,4 @@ class Migration(migrations.Migration):
             model_name="xpevent",
             index=models.Index(fields=["-created_at"], name="idx_xp_created_desc"),
         ),
-
     ]

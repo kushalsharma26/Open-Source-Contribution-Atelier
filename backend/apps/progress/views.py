@@ -72,7 +72,9 @@ class MyProgressView(APIView):
         from apps.progress.services.progress_tracking_service import (
             ProgressTrackingService,
         )
+        from apps.progress.services.progress_buffer import ProgressBufferService
         from django.core.exceptions import ObjectDoesNotExist
+        from apps.content.models import Lesson
 
         lesson_slug = request.data.get("lesson_slug")
         idempotency_key = request.data.get("idempotency_key")
@@ -81,21 +83,50 @@ class MyProgressView(APIView):
         completed = request.data.get("completed", True)
 
         try:
-            progress, created, idempotency_hit = (
-                ProgressTrackingService.record_lesson_progress(
-                    user=request.user,
-                    lesson_slug=lesson_slug,
-                    base_score=base_score,
-                    completed=completed,
-                    idempotency_key=idempotency_key,
-                    client_timestamp_ms=client_timestamp_ms,
-                )
+            lesson = Lesson.objects.get(
+                slug=lesson_slug,
+                organization=request.user.organization,
             )
-        except ObjectDoesNotExist:
+        except Lesson.DoesNotExist:
             return Response(
                 {"error": "Lesson not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        payload = {
+            "user_id": request.user.id,
+            "lesson_slug": lesson_slug,
+            "score": base_score,
+            "completed": completed,
+            "idempotency_key": idempotency_key,
+            "client_timestamp": client_timestamp_ms
+        }
+        
+        buffered = ProgressBufferService.buffer_update(request.user.id, lesson_slug, payload)
+        
+        if buffered:
+            # Return accepted response with optimistic in-memory model
+            progress = LessonProgress(
+                user=request.user,
+                lesson=lesson,
+                completed=completed,
+                base_score=base_score,
+                score=base_score,
+            )
+            serializer = LessonProgressSerializer(progress)
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+        # Fallback to synchronous update if Redis is not available
+        progress, created, idempotency_hit = (
+            ProgressTrackingService.record_lesson_progress(
+                user=request.user,
+                lesson_slug=lesson_slug,
+                base_score=base_score,
+                completed=completed,
+                idempotency_key=idempotency_key,
+                client_timestamp_ms=client_timestamp_ms,
+            )
+        )
 
         serializer = LessonProgressSerializer(progress)
 
@@ -996,3 +1027,27 @@ class LeaderboardView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class BufferMetricsView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from apps.progress.services.progress_buffer import ProgressBufferService
+        
+        metrics = ProgressBufferService.get_queue_metrics()
+        
+        # Calculate some derived metrics
+        total_queued = metrics.get("total_queued", 0)
+        total_processed = metrics.get("total_processed", 0)
+        
+        success_rate = 100.0
+        if total_queued > 0:
+            success_rate = round((total_processed / total_queued) * 100, 2)
+            
+        metrics["success_rate_percent"] = success_rate
+        
+        return Response({
+            "success": True,
+            "metrics": metrics
+        })
