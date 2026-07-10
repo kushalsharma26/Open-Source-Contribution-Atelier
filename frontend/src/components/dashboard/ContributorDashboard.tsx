@@ -67,6 +67,7 @@ export function ContributorDashboard() {
   const [showCertificate, setShowCertificate] = useState(false);
   const [showProgressReport, setShowProgressReport] = useState(false);
   const [gitHubContributors, setGitHubContributors] = useState<GitHubContributor[]>([]);
+  const [showOnlyBookmarked, setShowOnlyBookmarked] = useState(false);
 
   useEffect(() => {
     fetch("/content/curriculum.json")
@@ -206,9 +207,12 @@ export function ContributorDashboard() {
       isLessonCompleted(lesson.slug),
     ).length;
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-    const queue = lessons
-      .filter((lesson) => !isLessonCompleted(lesson.slug))
-      .slice(0, 3);
+    let queue = lessons.filter((lesson) => !isLessonCompleted(lesson.slug));
+    if (showOnlyBookmarked) {
+      const bookmarkedSlugs = new Set(bookmarks.map((b) => b.lesson_slug));
+      queue = queue.filter((lesson) => bookmarkedSlugs.has(lesson.slug));
+    }
+    queue = queue.slice(0, 3);
 
     const earned = new Set<string>(
       contributorData?.personal_stats?.earned_badges || [],
@@ -229,7 +233,7 @@ export function ContributorDashboard() {
       activeLessonsQueue: queue,
       earnedBadges: Array.from(earned),
     };
-  }, [lessons, curriculumData, isLessonCompleted, contributorData]);
+  }, [lessons, curriculumData, isLessonCompleted, contributorData, showOnlyBookmarked, bookmarks]);
 
   const { data: certificateData } = useQuery<CertificateResponse>({
     queryKey: ["userCertificate"],
@@ -469,12 +473,25 @@ return (
     id="tour-learning-queue"
     className="rounded-2xl border-4 border-black bg-white p-6 shadow-card dark:bg-[#1f1c18] dark:border-[#2e2924] dark:shadow-none"
   >
-    <h2 className="text-3xl font-black mb-6 flex items-center gap-3">
-      <span className="bg-primary text-white w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-lg dark:bg-primary/20 dark:text-primary">
-        📚
-      </span>
-      Resume Learning Queue
-    </h2>
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <h2 className="text-3xl font-black flex items-center gap-3">
+        <span className="bg-primary text-white w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-lg dark:bg-primary/20 dark:text-primary">
+          📚
+        </span>
+        Resume Learning Queue
+      </h2>
+      <label className="flex items-center gap-2 cursor-pointer bg-surface-low px-3 py-1.5 rounded-lg border-2 border-black shadow-card-sm hover:-translate-y-0.5 transition-transform dark:bg-[#151411] dark:border-[#2e2924]">
+        <input
+          type="checkbox"
+          className="w-4 h-4 accent-primary cursor-pointer"
+          checked={showOnlyBookmarked}
+          onChange={(e) => setShowOnlyBookmarked(e.target.checked)}
+        />
+        <span className="text-xs font-black uppercase tracking-wider text-text dark:text-[#f0ebe2]">
+          Bookmarked Only
+        </span>
+      </label>
+    </div>
     <div className="space-y-4">
       {activeLessonsQueue.length > 0 ? (
         activeLessonsQueue.map((lesson: Lesson) => (
