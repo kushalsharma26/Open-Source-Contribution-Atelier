@@ -1,18 +1,18 @@
-import React from 'react';
-import { Lesson } from '../lib/lessons';
+import React from "react";
+import { Lesson } from "../lib/lessons";
 
 export interface LessonPlugin {
   /** Unique identifier for the plugin (e.g. 'python_sandbox', 'quiz') */
   type: string;
-  
+
   /** Metadata version to handle compatibility */
   version: string;
-  
+
   /** Determines if this plugin can render the given lesson data */
   canHandle: (lesson: Lesson) => boolean;
-  
+
   /** The React component used to render the interactive portion of the lesson */
-  component: React.ComponentType<{ 
+  component: React.ComponentType<{
     lesson: Lesson;
     onSuccess: (score?: number) => void;
   }>;
@@ -27,7 +27,9 @@ class PluginRegistry {
       return;
     }
     this.plugins.set(plugin.type, plugin);
-    console.log(`[PluginRegistry] Registered frontend plugin: ${plugin.type} v${plugin.version}`);
+    console.log(
+      `[PluginRegistry] Registered frontend plugin: ${plugin.type} v${plugin.version}`,
+    );
   }
 
   getPluginForLesson(lesson: Lesson): LessonPlugin | null {

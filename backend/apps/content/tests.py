@@ -480,7 +480,9 @@ def test_feedback_user_own_feedback():
         difficulty="beginner",
     )
 
-    LessonFeedback.objects.create(user=user, lesson=lesson, rating=5, comment="Loved it!")
+    LessonFeedback.objects.create(
+        user=user, lesson=lesson, rating=5, comment="Loved it!"
+    )
 
     client = APIClient()
     client.force_authenticate(user=user)
@@ -512,6 +514,7 @@ def test_feedback_list_api():
 
     assert response.status_code == 200
     assert len(response.data) == 1
+
 
 @pytest.mark.django_db
 def test_user_cannot_update_another_users_feedback():
@@ -552,3 +555,23 @@ def test_user_cannot_update_another_users_feedback():
 
     assert feedback.rating == 4
     assert feedback.comment == "Original comment"
+
+
+@pytest.mark.django_db
+def test_search_view_anonymous_user():
+    client = APIClient()
+    response = client.get("/api/content/search/?q=React")
+    # Should not crash (HTTP 500), but return empty results cleanly (HTTP 200)
+    assert response.status_code == 200
+    assert response.data == {"lessons": [], "challenges": []}
+
+
+@pytest.mark.django_db
+def test_semantic_search_view_anonymous_user():
+    client = APIClient()
+    response = client.get("/api/content/semantic-search/?q=React")
+    # Should not crash (HTTP 500), but return empty results cleanly (HTTP 200 or 503 if unavailable)
+    assert response.status_code in [200, 503]
+    if response.status_code == 200:
+        assert response.data == {"query": "React", "results": []}
+

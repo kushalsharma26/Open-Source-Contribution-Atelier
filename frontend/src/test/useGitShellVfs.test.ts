@@ -17,7 +17,7 @@ describe("Virtual File System Edge Cases", () => {
       "touch file1.txt",
       "mkdir dir1",
       "touch dir1/file2.txt",
-      "mkdir dir2"
+      "mkdir dir2",
     ];
     for (const c of cmds) {
       state = runCommand(c, state, lineId).newState;

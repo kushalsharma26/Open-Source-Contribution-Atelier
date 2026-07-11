@@ -7,11 +7,11 @@ type A11yIssue = axe.Result;
 
 export function A11yLinterSandbox() {
   const [code, setCode] = useState(
-    `<main>\n  <h1>Welcome</h1>\n  <img src="cat.jpg" />\n  <button></button>\n</main>`
+    `<main>\n  <h1>Welcome</h1>\n  <img src="cat.jpg" />\n  <button></button>\n</main>`,
   );
   const [issues, setIssues] = useState<A11yIssue[]>([]);
   const [ignoredRules, setIgnoredRules] = useState<Set<string>>(new Set());
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const monaco = useMonaco();
   const editorRef = useRef<any>(null);
@@ -24,14 +24,14 @@ export function A11yLinterSandbox() {
       const results = await axe.run(containerRef.current, {
         rules: {
           // You can disable rules here based on ignoredRules
-        }
+        },
       });
 
       const filteredIssues = results.violations.filter(
-        v => !ignoredRules.has(v.id)
+        (v) => !ignoredRules.has(v.id),
       );
       setIssues(filteredIssues);
-      
+
       updateDecorations(filteredIssues);
     } catch (err) {
       console.error("Axe core error:", err);
@@ -52,19 +52,19 @@ export function A11yLinterSandbox() {
     // Realistically, axe gives DOM nodes. We can try to map DOM nodes back to lines in code if we have a parser,
     // but for a simple implementation, we can highlight the first line or just show the panel.
     // For a more advanced setup, we would parse HTML to get line numbers of violations.
-    
+
     // As a rudimentary approach without an HTML AST parser:
     const newDecorations: any[] = [];
-    
-    violations.forEach(v => {
-      v.nodes.forEach(node => {
+
+    violations.forEach((v) => {
+      v.nodes.forEach((node) => {
         // try to find the HTML snippet in code
         const snippet = node.html;
-        const lines = code.split('\n');
-        
+        const lines = code.split("\n");
+
         let foundLine = -1;
         let foundCol = -1;
-        
+
         for (let i = 0; i < lines.length; i++) {
           if (lines[i].includes(snippet)) {
             foundLine = i + 1;
@@ -72,9 +72,9 @@ export function A11yLinterSandbox() {
             break;
           }
         }
-        
+
         // If exact snippet not found, just use node target selector roughly
-        if (foundLine === -1 && typeof node.target[0] === 'string') {
+        if (foundLine === -1 && typeof node.target[0] === "string") {
           const targetStr = node.target[0] as string;
           const tagMatch = targetStr.match(/^([a-z0-9]+)/i);
           if (tagMatch) {
@@ -91,14 +91,22 @@ export function A11yLinterSandbox() {
 
         if (foundLine !== -1) {
           newDecorations.push({
-            range: new monaco.Range(foundLine, foundCol, foundLine, foundCol + (snippet ? snippet.length : 10)),
+            range: new monaco.Range(
+              foundLine,
+              foundCol,
+              foundLine,
+              foundCol + (snippet ? snippet.length : 10),
+            ),
             options: {
               isWholeLine: false,
-              className: 'a11y-error-decoration',
-              glyphMarginClassName: 'a11y-error-glyph',
-              hoverMessage: { value: `**A11y Issue: ${v.id}**\n\n${v.help}\n\n${node.failureSummary}` },
-              inlineClassName: 'decoration-wavy decoration-red-500 underline-offset-4 decoration-2 underline'
-            }
+              className: "a11y-error-decoration",
+              glyphMarginClassName: "a11y-error-glyph",
+              hoverMessage: {
+                value: `**A11y Issue: ${v.id}**\n\n${v.help}\n\n${node.failureSummary}`,
+              },
+              inlineClassName:
+                "decoration-wavy decoration-red-500 underline-offset-4 decoration-2 underline",
+            },
           });
         }
       });
@@ -106,12 +114,12 @@ export function A11yLinterSandbox() {
 
     decorationsRef.current = editorRef.current.deltaDecorations(
       decorationsRef.current,
-      newDecorations
+      newDecorations,
     );
   };
 
   const toggleIgnoreRule = (ruleId: string) => {
-    setIgnoredRules(prev => {
+    setIgnoredRules((prev) => {
       const next = new Set(prev);
       if (next.has(ruleId)) next.delete(ruleId);
       else next.add(ruleId);
@@ -121,10 +129,10 @@ export function A11yLinterSandbox() {
 
   const getSeverityIcon = (impact?: string | null) => {
     switch (impact) {
-      case 'critical':
-      case 'serious':
+      case "critical":
+      case "serious":
         return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'moderate':
+      case "moderate":
         return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       default:
         return <Info className="w-4 h-4 text-blue-500" />;
@@ -146,7 +154,9 @@ export function A11yLinterSandbox() {
             value={code}
             onChange={(val) => setCode(val || "")}
             theme="vs-dark"
-            onMount={(editor) => { editorRef.current = editor; }}
+            onMount={(editor) => {
+              editorRef.current = editor;
+            }}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
@@ -161,7 +171,14 @@ export function A11yLinterSandbox() {
         {/* Hidden container for axe-core evaluation */}
         <div
           ref={containerRef}
-          style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1000px', height: '1000px', overflow: 'hidden' }}
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            top: "-9999px",
+            width: "1000px",
+            height: "1000px",
+            overflow: "hidden",
+          }}
           dangerouslySetInnerHTML={{ __html: code }}
         />
 
@@ -178,8 +195,11 @@ export function A11yLinterSandbox() {
                 No accessibility issues found!
               </div>
             ) : (
-              issues.map(issue => (
-                <div key={issue.id} className="border-2 border-black dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-[#1a1b26]">
+              issues.map((issue) => (
+                <div
+                  key={issue.id}
+                  className="border-2 border-black dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-[#1a1b26]"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 font-bold mb-1 text-text dark:text-[#a9b1d6]">
                       {getSeverityIcon(issue.impact)}
@@ -197,9 +217,16 @@ export function A11yLinterSandbox() {
                   </p>
                   <div className="flex flex-col gap-2">
                     {issue.nodes.map((node, i) => (
-                      <div key={i} className="text-xs bg-gray-100 dark:bg-[#151411] p-2 rounded border border-gray-200 dark:border-gray-800">
-                        <code className="text-pink-500 font-mono block mb-1">{node.target.join(", ")}</code>
-                        <span className="text-gray-600 dark:text-gray-400">{node.failureSummary}</span>
+                      <div
+                        key={i}
+                        className="text-xs bg-gray-100 dark:bg-[#151411] p-2 rounded border border-gray-200 dark:border-gray-800"
+                      >
+                        <code className="text-pink-500 font-mono block mb-1">
+                          {node.target.join(", ")}
+                        </code>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {node.failureSummary}
+                        </span>
                       </div>
                     ))}
                   </div>

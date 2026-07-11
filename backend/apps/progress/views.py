@@ -1,4 +1,4 @@
-import uuid # NEW: Added for cryptographic nonce generation
+import uuid  # NEW: Added for cryptographic nonce generation
 from datetime import datetime, timezone as dt_timezone
 
 from django.contrib.auth.models import User
@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.core.cache import cache
 from apps.content.serializers import LessonSerializer
+from apps.content.models import Lesson
 
 from .models import (
     Badge,
@@ -39,6 +40,7 @@ from .serializers import (
     LessonProgressCreateSerializer,
     LessonProgressSerializer,
     QuizAttemptSerializer,
+    DailyProgressSerializer,
 )
 from .throttles import HelpRequestRateThrottle
 
@@ -67,8 +69,12 @@ class MyProgressView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        from apps.progress.services.progress_tracking_service import ProgressTrackingService
+        from apps.progress.services.progress_tracking_service import (
+            ProgressTrackingService,
+        )
+        from apps.progress.services.progress_buffer import ProgressBufferService
         from django.core.exceptions import ObjectDoesNotExist
+        from apps.content.models import Lesson
 
         lesson_slug = request.data.get("lesson_slug")
         idempotency_key = request.data.get("idempotency_key")
@@ -77,19 +83,52 @@ class MyProgressView(APIView):
         completed = request.data.get("completed", True)
 
         try:
-            progress, created, idempotency_hit = ProgressTrackingService.record_lesson_progress(
+            lesson = Lesson.objects.get(
+                slug=lesson_slug,
+                organization=request.user.organization,
+            )
+        except Lesson.DoesNotExist:
+            return Response(
+                {"error": "Lesson not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        payload = {
+            "user_id": request.user.id,
+            "lesson_slug": lesson_slug,
+            "score": base_score,
+            "completed": completed,
+            "idempotency_key": idempotency_key,
+            "client_timestamp": client_timestamp_ms,
+        }
+
+        buffered = ProgressBufferService.buffer_update(
+            request.user.id, lesson_slug, payload
+        )
+
+        if buffered:
+            # Return accepted response with optimistic in-memory model
+            progress = LessonProgress(
+                user=request.user,
+                lesson=lesson,
+                completed=completed,
+                base_score=base_score,
+                score=base_score,
+            )
+            serializer = LessonProgressSerializer(progress)
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+        # Fallback to synchronous update if Redis is not available
+        progress, created, idempotency_hit = (
+            ProgressTrackingService.record_lesson_progress(
                 user=request.user,
                 lesson_slug=lesson_slug,
                 base_score=base_score,
                 completed=completed,
                 idempotency_key=idempotency_key,
-                client_timestamp_ms=client_timestamp_ms
+                client_timestamp_ms=client_timestamp_ms,
             )
-        except ObjectDoesNotExist:
-            return Response(
-                {"error": "Lesson not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        )
 
         serializer = LessonProgressSerializer(progress)
 
@@ -106,11 +145,12 @@ class BulkSyncProgressView(APIView):
         serializer = BulkSyncSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        from apps.progress.services.progress_tracking_service import ProgressTrackingService
-        
+        from apps.progress.services.progress_tracking_service import (
+            ProgressTrackingService,
+        )
+
         synced_ids = ProgressTrackingService.bulk_sync_progress(
-            user=request.user, 
-            lessons_data=serializer.validated_data["lessons"]
+            user=request.user, lessons_data=serializer.validated_data["lessons"]
         )
 
         return Response(
@@ -512,6 +552,7 @@ class ContributorTimelineView(APIView):
             }
         )
 
+
 # NEW: View to generate the one-time Nonce for Quizzes
 class QuizNonceView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -519,7 +560,9 @@ class QuizNonceView(APIView):
     def get(self, request):
         question_id = request.query_params.get("question_id")
         if not question_id:
-            return Response({"error": "question_id required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "question_id required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         nonce = str(uuid.uuid4())
         # Store in Redis bounded to user AND specific question. TTL = 900s (15 minutes)
@@ -553,17 +596,17 @@ class QuizAttemptView(APIView):
 
         if not nonce or not question_id:
             return Response(
-                {"error": "Security Error: Nonce and question_id are required."}, 
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Security Error: Nonce and question_id are required."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         cache_key = f"quiz_nonce_{request.user.id}_{question_id}_{nonce}"
-        
+
         # Check if the nonce exists in Redis
         if not cache.get(cache_key):
             return Response(
-                {"error": "Invalid or expired session. Replay attack blocked."}, 
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Invalid or expired session. Replay attack blocked."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # CRITICAL: Invalidate the nonce immediately to prevent double submission
@@ -737,8 +780,13 @@ from .models import CodeSubmission, ExerciseAttempt, PeerReview
 from .serializers import CodeSubmissionSerializer, PeerReviewSerializer
 
 
+from rest_framework.throttling import ScopedRateThrottle
+
+
 class CodeSubmissionView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "sandbox_user"
 
     def get(self, request):
         submissions = (
@@ -880,14 +928,17 @@ class LessonBookmarkView(APIView):
         bookmark.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class ReadingProgressView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         lesson_slug = request.query_params.get("lesson")
         if not lesson_slug:
-            return Response({"error": "Lesson slug required"}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": "Lesson slug required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         cache_key = f"reading_progress_{request.user.id}_{lesson_slug}"
         progress = cache.get(cache_key, 0)
         return Response({"progress": progress})
@@ -895,10 +946,137 @@ class ReadingProgressView(APIView):
     def post(self, request):
         lesson_slug = request.data.get("lesson")
         progress = request.data.get("progress")
-        
+
         if not lesson_slug or progress is None:
-            return Response({"error": "Lesson slug and progress required"}, status=status.HTTP_400_BAD_REQUEST)
-            
+            return Response(
+                {"error": "Lesson slug and progress required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         cache_key = f"reading_progress_{request.user.id}_{lesson_slug}"
         cache.set(cache_key, progress, timeout=60 * 60 * 24 * 30)
         return Response({"status": "success", "progress": progress})
+
+
+class DailyLessonStatsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        progress_records = (
+            LessonProgress.objects.filter(user=request.user, completed=True)
+            .select_related("lesson")
+            .order_by("updated_at")
+        )
+
+        # Group by date locally in Python
+        stats = {}
+        for record in progress_records:
+            date_str = record.updated_at.date().isoformat()
+            if date_str not in stats:
+                stats[date_str] = {
+                    "date": record.updated_at.date(),
+                    "count": 0,
+                    "lessons": [],
+                }
+            stats[date_str]["count"] += 1
+            stats[date_str]["lessons"].append(record.lesson.title)
+
+        data = sorted(stats.values(), key=lambda x: x["date"])
+        serializer = DailyProgressSerializer(data, many=True)
+        return Response(serializer.data)
+
+
+class LeaderboardView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        time_period = request.query_params.get("time_period", "all_time")
+        search_username = request.query_params.get("username", None)
+        try:
+            page = int(request.query_params.get("page", 1))
+            limit = int(request.query_params.get("limit", 50))
+        except ValueError:
+            page = 1
+            limit = 50
+
+        from apps.progress.services.leaderboard_service import LeaderboardService
+
+        result = LeaderboardService.get_leaderboard(
+            time_period=time_period,
+            page=page,
+            limit=limit,
+            search_username=search_username,
+        )
+
+        # Add user's personal rank if authenticated and not searching
+        personal_rank = None
+        if request.user.is_authenticated and not search_username:
+            personal_rank = LeaderboardService.get_user_rank(
+                request.user.username, time_period=time_period
+            )
+
+        total_users = result.get("total_users", 0)
+        total_pages = (total_users + limit - 1) // limit if total_users > 0 else 1
+
+        return Response(
+            {
+                "leaderboard": result.get("leaderboard", []),
+                "personal_rank": personal_rank,
+                "page": page,
+                "limit": limit,
+                "total_users": total_users,
+                "total_pages": total_pages,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class BufferMetricsView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from apps.progress.services.progress_buffer import ProgressBufferService
+
+        metrics = ProgressBufferService.get_queue_metrics()
+
+        # Calculate some derived metrics
+        total_queued = metrics.get("total_queued", 0)
+        total_processed = metrics.get("total_processed", 0)
+
+        success_rate = 100.0
+        if total_queued > 0:
+            success_rate = round((total_processed / total_queued) * 100, 2)
+
+        metrics["success_rate_percent"] = success_rate
+
+        return Response({"success": True, "metrics": metrics})
+
+
+class HeatmapView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from django.contrib.auth.models import User
+        from django.shortcuts import get_object_or_404
+        from apps.progress.models import DailyActivity
+        import datetime
+
+        username = request.query_params.get("username")
+        if username:
+            user = get_object_or_404(User, username=username)
+        else:
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication credentials were not provided."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            user = request.user
+
+        one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
+        activities = DailyActivity.objects.filter(user=user, date__gte=one_year_ago)
+
+        data = []
+        for act in activities:
+            data.append({"date": act.date.isoformat(), "count": 1})
+
+        return Response(data, status=status.HTTP_200_OK)

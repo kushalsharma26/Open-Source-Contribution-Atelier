@@ -8,6 +8,8 @@ from .serializers import CodeSnapshotSerializer
 from .services import verify_git_command
 
 
+from rest_framework.throttling import ScopedRateThrottle
+
 class SandboxVerifySerializer(serializers.Serializer):
     command = serializers.CharField()
     expected_command = serializers.CharField()
@@ -15,6 +17,8 @@ class SandboxVerifySerializer(serializers.Serializer):
 
 class SandboxVerifyView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "sandbox_user"
 
     def post(self, request):
         serializer = SandboxVerifySerializer(data=request.data)
@@ -149,7 +153,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 # Sanitize path to prevent Zip Slip (Directory Traversal)
                 raw_path = (file.path or "").replace("\\", "/").lstrip("/")
                 clean_path = os.path.normpath(raw_path).replace("\\", "/")
-                if clean_path in ("", ".", "..") or clean_path.startswith("../") or ":" in clean_path.split("/", 1)[0]:
+                if (
+                    clean_path in ("", ".", "..")
+                    or clean_path.startswith("../")
+                    or ":" in clean_path.split("/", 1)[0]
+                ):
                     continue  # Skip paths that could escape the archive root
                 zip_file.writestr(clean_path, file.content)
 

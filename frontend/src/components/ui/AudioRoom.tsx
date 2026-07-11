@@ -37,9 +37,7 @@ export function AudioRoom({ roomId, onEndCall }: AudioRoomProps) {
 
         // Initialize PeerConnection
         const pc = new RTCPeerConnection({
-          iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-          ],
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
         });
         peerConnectionRef.current = pc;
 
@@ -52,7 +50,10 @@ export function AudioRoom({ roomId, onEndCall }: AudioRoomProps) {
         };
 
         pc.oniceconnectionstatechange = () => {
-          if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+          if (
+            pc.iceConnectionState === "disconnected" ||
+            pc.iceConnectionState === "failed"
+          ) {
             setConnectionState("Disconnected");
           } else if (pc.iceConnectionState === "connected") {
             setConnectionState("Connected");
@@ -81,13 +82,17 @@ export function AudioRoom({ roomId, onEndCall }: AudioRoomProps) {
             ws.send(JSON.stringify({ action: "offer", data: offer }));
           } else if (message.type === "webrtc_signal") {
             if (message.action === "offer") {
-              await pc.setRemoteDescription(new RTCSessionDescription(message.data));
+              await pc.setRemoteDescription(
+                new RTCSessionDescription(message.data),
+              );
               const answer = await pc.createAnswer();
               await pc.setLocalDescription(answer);
               ws.send(JSON.stringify({ action: "answer", data: answer }));
               setConnectionState("Connecting");
             } else if (message.action === "answer") {
-              await pc.setRemoteDescription(new RTCSessionDescription(message.data));
+              await pc.setRemoteDescription(
+                new RTCSessionDescription(message.data),
+              );
               setConnectionState("Connected");
             } else if (message.action === "ice-candidate") {
               try {
@@ -104,7 +109,10 @@ export function AudioRoom({ roomId, onEndCall }: AudioRoomProps) {
         pc.onicecandidate = (event) => {
           if (event.candidate && ws.readyState === WebSocket.OPEN) {
             ws.send(
-              JSON.stringify({ action: "ice-candidate", data: event.candidate })
+              JSON.stringify({
+                action: "ice-candidate",
+                data: event.candidate,
+              }),
             );
           }
         };
@@ -114,7 +122,8 @@ export function AudioRoom({ roomId, onEndCall }: AudioRoomProps) {
         };
       } catch (err: unknown) {
         if (!isCleanup) {
-          const errorMessage = err instanceof Error ? err.message : "Failed to access microphone.";
+          const errorMessage =
+            err instanceof Error ? err.message : "Failed to access microphone.";
           setError(errorMessage);
           setConnectionState("Disconnected");
         }
@@ -171,8 +180,8 @@ export function AudioRoom({ roomId, onEndCall }: AudioRoomProps) {
               connectionState === "Connected"
                 ? "text-green-600 dark:text-green-400"
                 : connectionState === "Connecting"
-                ? "text-yellow-600 dark:text-yellow-400"
-                : "text-red-600 dark:text-red-400"
+                  ? "text-yellow-600 dark:text-yellow-400"
+                  : "text-red-600 dark:text-red-400"
             }
           >
             {connectionState}

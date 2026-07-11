@@ -8,7 +8,7 @@ export function BadgeToastNotifier() {
   const { user } = useAuth();
   const { toasts, dismissToast } = useNotifications();
   const { playAudioCue } = useTheme();
-  
+
   // Track the previous toasts length context to ensure audio only fires on new alerts
   const previousLengthRef = useRef(toasts.length);
 
@@ -22,5 +22,7 @@ export function BadgeToastNotifier() {
 
   if (!user || user.is_staff) return null;
 
-  return <BadgeToastContainer toasts={toasts as any} onDismiss={dismissToast} />;
+  return (
+    <BadgeToastContainer toasts={toasts as any} onDismiss={dismissToast} />
+  );
 }

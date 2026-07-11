@@ -6,6 +6,7 @@ from pathlib import Path
 from config.auth import JWT_CONFIG, TOKEN_BLACKLIST_ENABLED
 
 import dj_database_url
+# pyrefly: ignore [missing-import]
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -15,23 +16,7 @@ TESTING = "test" in sys.argv or "pytest" in sys.modules
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def load_dotenv(dotenv_path: Path) -> None:
-    if not dotenv_path.exists():
-        return
-
-    for raw_line in dotenv_path.read_text().splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        val_stripped = value.strip()
-        if (val_stripped.startswith('"') and val_stripped.endswith('"')) or (
-            val_stripped.startswith("'") and val_stripped.endswith("'")
-        ):
-            val_stripped = val_stripped[1:-1].strip()
-        if val_stripped:
-            os.environ.setdefault(key.strip(), val_stripped)
-
+from dotenv import load_dotenv
 
 load_dotenv(BASE_DIR / ".env")
 
@@ -39,6 +24,8 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv(
     "SECRET_KEY", "django-insecure-dev-key-not-for-production-use-32bytes!!"
 )
+if not SECRET_KEY:
+    raise ImproperlyConfigured("SECRET_KEY environment variable is not set")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # ──────────────────────────────────────────
@@ -158,8 +145,24 @@ INSTALLED_APPS = [
     "graphene_django",
     "apps.moderation",
     "apps.events",
+    "apps.portfolio",
+    "apps.feature_flags",
+    "apps.issues",
     "django_q",
 ]
+# Redis Cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# Rate Limit
+DEFAULT_RATE = '100/hour'
 
 MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
@@ -174,6 +177,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.cache.middleware.RateLimitMiddleware",
     "apps.sandbox.middleware.SandboxExecutionLogMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
@@ -249,13 +253,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Update JWT settings
 SIMPLE_JWT = JWT_CONFIG
 
-#Github App Configuration
-GITHUB_APP={
-    'APP_ID': os.getenv('GITHUB_APP_ID'),
-    'PRIVATE_KEY_PATH': os.getenv('GITHUB_PRIVATE_KEY_PATH'),
-    'CLIENT_ID': os.getenv('GITHUB_CLIENT_ID'),
-    'CLIENT_SECRET': os.getenv('GITHUB_CLIENT_SECRET'),
-    'WEBHOOK_SECRET': os.getenv('GITHUB_WEBHOOK_SECRET'),
+# Github App Configuration
+GITHUB_APP = {
+    "APP_ID": os.getenv("GITHUB_APP_ID"),
+    "PRIVATE_KEY_PATH": os.getenv("GITHUB_PRIVATE_KEY_PATH"),
+    "CLIENT_ID": os.getenv("GITHUB_CLIENT_ID"),
+    "CLIENT_SECRET": os.getenv("GITHUB_CLIENT_SECRET"),
+    "WEBHOOK_SECRET": os.getenv("GITHUB_WEBHOOK_SECRET"),
 }
 GITHUB_INSTALLATION_ID = os.getenv("GITHUB_INSTALLATION_ID")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -543,3 +547,7 @@ CURRICULUM_JSON_PATH = os.getenv(
         ).resolve()
     ),
 )
+
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_STORE_EAGER_RESULT = True
+
