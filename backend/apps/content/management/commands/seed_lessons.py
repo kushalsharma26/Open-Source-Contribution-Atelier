@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict, List
 
 from django.core.management.base import BaseCommand
@@ -292,50 +293,104 @@ LESSONS: List[Dict[str, Any]] = [
 class Command(BaseCommand):
     help = "Seed the database with example lessons and exercises. Safe to run multiple times."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--format",
+            type=str,
+            default="json",
+            choices=["json", "text"],
+            help="Output format: 'json' for structured data, 'text' for human-readable",
+        )
+
     def handle(self, *args, **options):
+        output_format = options["format"]
+
+        seeded = []
+        skipped = []
+        errors = []
+
         previous_lesson = None
         for l in LESSONS:
-            lesson_obj, _ = Lesson.objects.update_or_create(
-                slug=l["slug"],
-                defaults={
-                    "difficulty": l.get("difficulty", "beginner"),
-                    "title": l["title"],
-                    "summary": l["summary"],
-                    "content": l["content"],
-                    "learning_objectives": l.get("learning_objectives", []),
-                    "tips": l.get("tips", []),
-                    "category": l.get("category", "general"),
-                    "order": l.get("order", 0),
-                    "estimated_minutes": l.get("estimated_minutes", 15),
-                },
-            )
+            try:
+                lesson_obj, created = Lesson.objects.update_or_create(
+                    slug=l["slug"],
+                    defaults={
+                        "difficulty": l.get("difficulty", "beginner"),
+                        "title": l["title"],
+                        "summary": l["summary"],
+                        "content": l["content"],
+                        "learning_objectives": l.get("learning_objectives", []),
+                        "tips": l.get("tips", []),
+                        "category": l.get("category", "general"),
+                        "order": l.get("order", 0),
+                        "estimated_minutes": l.get("estimated_minutes", 15),
+                    },
+                )
 
-            if previous_lesson:
-                lesson_obj.prerequisites.add(previous_lesson)
-            previous_lesson = lesson_obj
+                if previous_lesson:
+                    lesson_obj.prerequisites.add(previous_lesson)
+                previous_lesson = lesson_obj
 
-            self.stdout.write(
-                self.style.SUCCESS(f"Created/updated lesson: {lesson_obj.slug}")
-            )
-
-            exercises = l.get("exercises", [])
-            if isinstance(exercises, list):
-                for ex in exercises:
-                    ex_obj, _ = Exercise.objects.update_or_create(
-                        lesson=lesson_obj,
-                        title=ex["title"],
-                        defaults={
-                            "prompt": ex["prompt"],
-                            "expected_command": ex.get("expected_command", ""),
-                            "explanation": ex.get("explanation", ""),
-                            "points": ex.get("points", 10),
-                        },
-                    )
-
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f"  Created/updated exercise: {ex_obj.title}"
+                if created:
+                    seeded.append(lesson_obj.slug)
+                    if output_format == "text":
+                        self.stdout.write(
+                            self.style.SUCCESS(f"✓ Created lesson: {lesson_obj.slug}")
                         )
-                    )
+                else:
+                    skipped.append(lesson_obj.slug)
+                    if output_format == "text":
+                        self.stdout.write(
+                            self.style.WARNING(f"~ Skipped lesson: {lesson_obj.slug}")
+                        )
 
-        self.stdout.write(self.style.SUCCESS("Seeding complete."))
+                exercises = l.get("exercises", [])
+                if isinstance(exercises, list):
+                    for ex in exercises:
+                        ex_obj, ex_created = Exercise.objects.update_or_create(
+                            lesson=lesson_obj,
+                            title=ex["title"],
+                            defaults={
+                                "prompt": ex["prompt"],
+                                "expected_command": ex.get("expected_command", ""),
+                                "explanation": ex.get("explanation", ""),
+                                "points": ex.get("points", 10),
+                            },
+                        )
+
+                        if output_format == "text":
+                            if ex_created:
+                                self.stdout.write(
+                                    self.style.SUCCESS(
+                                        f"  ✓ Created exercise: {ex_obj.title}"
+                                    )
+                                )
+                            else:
+                                self.stdout.write(
+                                    self.style.WARNING(
+                                        f"  ~ Skipped exercise: {ex_obj.title}"
+                                    )
+                                )
+            except Exception as e:
+                error_msg = f"Error seeding lesson {l.get('slug', 'unknown')}: {str(e)}"
+                errors.append(error_msg)
+                if output_format == "text":
+                    self.stdout.write(self.style.ERROR(error_msg))
+
+        result = {
+            "seeded": seeded,
+            "skipped": skipped,
+            "errors": errors,
+            "total": len(seeded) + len(skipped),
+        }
+
+        if output_format == "json":
+            self.stdout.write(json.dumps(result, indent=2))
+        else:
+            self.stdout.write(self.style.SUCCESS("\nSeeding complete."))
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Summary: {len(seeded)} lessons seeded, {len(skipped)} skipped, "
+                    f"{len(errors)} errors. Total: {result['total']}"
+                )
+            )
