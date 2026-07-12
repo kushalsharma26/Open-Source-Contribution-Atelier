@@ -208,6 +208,8 @@ export function AppRouter() {
             path="/verify/:hash"
             element={<VerifyCertificatePage />}
           />
+          
+          <Route path="/500" element={<ServerErrorPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Route>
