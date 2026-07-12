@@ -1,24 +1,16 @@
 import { useEffect, useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
-import { GitBranch, Moon, Sun } from "lucide-react";
+import { GitBranch, Moon, Sun, Sparkles, Shield, Zap, Users } from "lucide-react";
 import { fetchApi } from "../lib/api";
 import { useAuth } from "../features/auth/AuthContext";
-import { PublicPreview } from '../components/PublicPreview';
 import { useTheme } from "../hooks/useTheme";
 import OrganizationsGrid from "../components/OrganizationsGrid";
 
-import { useTranslation } from "react-i18next";
-
-// Safely look up variables across Next.js compilation bundles and Vite browser environments
 const getEnvVar = (key: string): string => {
   if (typeof process !== "undefined" && process.env && process.env[key]) {
     return process.env[key] as string;
   }
-  if (
-    typeof import.meta !== "undefined" &&
-    import.meta.env &&
-    import.meta.env[key]
-  ) {
+  if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[key]) {
     return import.meta.env[key] as string;
   }
   return "";
@@ -28,17 +20,18 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-export function LandingPage() {
-  const { t } = useTranslation();
+const features = [
+  { icon: Zap, title: "Learn by Doing", desc: "Real open source contributions with guided mentorship" },
+  { icon: Shield, title: "Verified Projects", desc: "Curated issues from trusted open source organizations" },
+  { icon: Users, title: "Community Driven", desc: "Join thousands of developers building real software" },
+];
 
-  // Safely obtain login function; if AuthContext is not provided, default to a no-op.
+export function LandingPage() {
   let login: (tokens: { access: string; refresh: string }) => void = () => {};
   try {
     const auth = useAuth();
     login = auth.login;
-  } catch {
-    // No AuthProvider in the tree; proceed with fallback login.
-  }
+  } catch {}
 
   const { theme, toggleTheme } = useTheme();
   const [authRole, setAuthRole] = useState<"student" | "admin">("student");
@@ -48,17 +41,12 @@ export function LandingPage() {
   const [githubUrl, setGithubUrl] = useState("");
 
   useEffect(() => {
-    // Ensure window environment lookups only run safely on the browser client thread
     if (typeof window !== "undefined") {
-      const authError = new URLSearchParams(window.location.search).get(
-        "auth_error",
-      );
+      const authError = new URLSearchParams(window.location.search).get("auth_error");
       if (authError) {
         setError(authError);
         window.history.replaceState({}, "", window.location.pathname);
       }
-
-      // Construct OAuth URLs dynamically on the client hook initialization layer
       const baseGithub =
         getEnvVar("VITE_GITHUB_OAUTH_URL") ||
         `${getEnvVar("VITE_API_BASE_URL") || "http://localhost:8000/api"}/auth/github/`;
@@ -76,18 +64,14 @@ export function LandingPage() {
         body: JSON.stringify({ username: email, password }),
       });
       login(tokens);
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard";
-      }
+      if (typeof window !== "undefined") window.location.href = "/dashboard";
     } catch (err: unknown) {
-      setError(getErrorMessage(err, t("landing.error_login_failed")));
+      setError(getErrorMessage(err, "Login failed. Check your credentials."));
     }
   };
 
   const handleGithubSignIn = () => {
-    if (typeof window !== "undefined" && githubUrl) {
-      window.location.href = githubUrl;
-    }
+    if (typeof window !== "undefined" && githubUrl) window.location.href = githubUrl;
   };
 
   const googleLoginHandler = useGoogleLogin({
@@ -99,200 +83,190 @@ export function LandingPage() {
           body: JSON.stringify({ access_token: tokenResponse.access_token }),
         });
         login(tokens);
-        if (typeof window !== "undefined") {
-          window.location.href = "/dashboard";
-        }
-      } catch (err: unknown) {
-        setError(getErrorMessage(err, t("landing.error_google_auth_backend")));
+        if (typeof window !== "undefined") window.location.href = "/dashboard";
+      } catch {
+        setError("Google authentication failed. Please try again.");
       }
     },
-    onError: () => {
-      setError(t("landing.error_google_login_failed"));
-    },
+    onError: () => setError("Google login failed"),
   });
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-[#0a0a0f] dark:via-[#0d0d14] dark:to-[#0a0a1a]">
       <button
         onClick={toggleTheme}
-        aria-label={
-          theme === "light" ? "Switch to dark mode" : "Switch to light mode"
-        }
-        title={
-          theme === "light" ? "Switch to dark mode" : "Switch to light mode"
-        }
-        className="fixed top-4 right-6 sm:right-8 z-50 rounded-lg bg-surface-low p-2 text-muted hover:text-text border-2 border-black dark:border-[#4a4238] shadow-card-sm hover:-translate-y-0.5 active:translate-y-0 transition-all dark:bg-[#151411] dark:text-[#c4bbae] dark:hover:text-[#f0ebe2]"
+        className="fixed top-4 right-4 z-50 rounded-xl bg-white/80 dark:bg-[#1a1a2e]/80 backdrop-blur-sm p-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all"
       >
-        {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+        {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
       </button>
 
-      <div className="w-full max-w-lg mx-auto">
-        <div className="text-center mb-8">
-          <span className="font-black text-sm bg-accent text-black px-4 py-2 rounded-full border-2 border-black rotate-[-2deg] inline-block shadow-sm">
-            {t("landing.authorized_access_only")}
-          </span>
-        </div>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent dark:via-blue-500/5 pointer-events-none" />
 
-        <div className="bg-white dark:bg-[#151411] rounded-[2rem] border-4 border-black dark:border-[#4a4238] shadow-card-lg p-6 sm:p-10 relative">
-          <div className="flex gap-2 p-1 bg-surface-low dark:bg-[#0f0e0c] rounded-lg border-2 border-black dark:border-[#4a4238] mb-6">
-            <button
-              onClick={() => setAuthRole("student")}
-              className={`flex-1 py-2 font-bold rounded-lg transition-all border-2 ${
-                authRole === "student"
-                  ? "bg-white dark:bg-[#1f1c18] border-black dark:border-[#4a4238] shadow-card-sm -translate-y-0.5 text-text dark:text-[#f0ebe2]"
-                  : "border-transparent text-muted dark:text-[#9b8f80] hover:text-text dark:hover:text-[#f0ebe2]"
-              }`}
-            >
-              {t("landing.contributor")}
-            </button>
-            <button
-              onClick={() => setAuthRole("admin")}
-              className={`flex-1 py-2 font-bold rounded-lg transition-all border-2 ${
-                authRole === "admin"
-                  ? "bg-white dark:bg-[#1f1c18] border-black dark:border-[#4a4238] shadow-card-sm -translate-y-0.5 text-text dark:text-[#f0ebe2]"
-                  : "border-transparent text-muted dark:text-[#9b8f80] hover:text-text dark:hover:text-[#f0ebe2]"
-              }`}
-            >
-              {t("landing.maintainer")}
-            </button>
-          </div>
-
-          <h2 className="text-3xl font-black mb-6 text-center text-text dark:text-[#f0ebe2]">
-            {authRole === "student"
-              ? "Start Your First Contribution"
-              : t("landing.maintainer_login")}
-          </h2>
-
-          {error && (
-            <div className="text-black font-bold text-sm bg-primary p-3 rounded-lg border-4 border-black shadow-card-sm mb-4">
-              {error}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium mb-6 border border-blue-100 dark:border-blue-500/20">
+              <Sparkles size={14} />
+              Open Source Contribution Platform
             </div>
-          )}
-
-          <div className="how-it-works-section">
-            <h2 className="section-title">How It Works</h2>
-            <p className="section-subtitle">
-              Start your open source journey in 4 simple steps
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight mb-4">
+              Start Your{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Open Source
+              </span>{" "}
+              Journey
+            </h1>
+            <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Make your first contribution with confidence. Find beginner-friendly issues,
+              get guided support, and build your open source portfolio.
             </p>
-            <div className="steps-grid">
-              <div className="step-card">
-                <div className="step-number">1</div>
-                <div className="step-icon">🔐</div>
-                <h3>Sign In</h3>
-                <p>Use your GitHub or Google account to get started</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-16">
+            <div className="bg-white dark:bg-[#12121a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-8">
+              <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 mb-6">
+                <button
+                  onClick={() => setAuthRole("student")}
+                  className={`flex-1 py-2.5 font-bold rounded-lg transition-all text-sm ${
+                    authRole === "student"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  Contributor
+                </button>
+                <button
+                  onClick={() => setAuthRole("admin")}
+                  className={`flex-1 py-2.5 font-bold rounded-lg transition-all text-sm ${
+                    authRole === "admin"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  Maintainer
+                </button>
               </div>
-              <div className="step-card">
-                <div className="step-number">2</div>
-                <div className="step-icon">🔍</div>
-                <h3>Find an Issue</h3>
-                <p>Browse beginner-friendly issues from trusted projects</p>
+
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 text-center">
+                {authRole === "student"
+                  ? "Welcome Back"
+                  : "Maintainer Login"}
+              </h2>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 text-sm font-medium rounded-xl border border-red-100 dark:border-red-500/20">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => googleLoginHandler()}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-4 py-3.5 flex items-center justify-center gap-3 font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm hover:shadow-md active:scale-[0.99]"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGithubSignIn}
+                  className="w-full rounded-xl bg-slate-900 dark:bg-white px-4 py-3.5 flex items-center justify-center gap-3 font-semibold text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-all shadow-sm hover:shadow-md active:scale-[0.99]"
+                >
+                  <GitBranch size={20} />
+                  Continue with GitHub
+                </button>
               </div>
-              <div className="step-card">
-                <div className="step-number">3</div>
-                <div className="step-icon">💻</div>
-                <h3>Make Your Contribution</h3>
-                <p>Submit your first pull request with guided support</p>
+
+              <div className="flex items-center gap-4 my-6">
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                <span className="text-sm font-semibold text-slate-400 dark:text-slate-500">or</span>
+                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
               </div>
-              <div className="step-card">
-                <div className="step-number">4</div>
-                <div className="step-icon">📈</div>
-                <h3>Learn & Grow</h3>
-                <p>Get feedback, build skills, and earn recognition</p>
-              </div>
+
+              <form onSubmit={handleStandardLogin} className="space-y-4">
+                <div>
+                  <input
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-4 py-3.5 text-slate-900 dark:text-white font-medium outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    placeholder="Email or username"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <input
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-4 py-3.5 text-slate-900 dark:text-white font-medium outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3.5 font-bold text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg active:scale-[0.99]"
+                >
+                  Sign In
+                </button>
+              </form>
+
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+                New here?{" "}
+                <a href="/signup" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
+                  Create an account
+                </a>
+              </p>
+            </div>
+
+            <div className="flex flex-col justify-center space-y-6">
+              {features.map((feature, i) => (
+                <div key={i} className="bg-white/80 dark:bg-[#12121a]/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all">
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+                      <feature.icon size={20} className="text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 dark:text-white mb-1">{feature.title}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <OrganizationsGrid />
-          <form onSubmit={handleStandardLogin} className="space-y-4">
-            <button
-              type="button"
-              onClick={() => googleLoginHandler()}
-              className="w-full bg-white border-4 border-black rounded-2xl p-4 flex items-center justify-center gap-3 font-bold text-black hover:bg-surface-low transition-colors shadow-card-sm active:translate-y-1 active:shadow-none"
-            >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              {t("landing.sign_in_google")}
-            </button>
 
-            <button
-              type="button"
-              onClick={handleGithubSignIn}
-              className="group relative w-full overflow-hidden bg-black text-white border-4 border-black rounded-lg p-4 flex items-center justify-center gap-3 font-black shadow-card-sm transition-all duration-300 hover:-translate-y-1 hover:bg-text hover:shadow-card-lg active:translate-y-1 active:shadow-none uppercase before:absolute before:inset-0 before:-translate-x-full before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent before:transition-transform before:duration-500 hover:before:translate-x-full"
-              aria-label={t("landing.sign_in_github")}
-            >
-              <GitBranch
-                className="relative h-6 w-6 transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110"
-                strokeWidth={2.75}
-                aria-hidden="true"
-              />
-              <span className="relative">{t("landing.sign_in_github")}</span>
-            </button>
-
-            <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-1 bg-black dark:bg-[#4a4238]"></div>
-              <span className="font-black text-muted dark:text-[#9b8f80] text-sm uppercase">
-                {t("landing.or")}
-              </span>
-              <div className="flex-1 h-1 bg-black dark:bg-[#4a4238]"></div>
+          <div className="bg-white/60 dark:bg-[#12121a]/60 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-slate-800 p-8 sm:p-12 max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-8">
+              How It Works
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { num: "01", icon: "🔐", title: "Sign In", desc: "Use your GitHub or Google account" },
+                { num: "02", icon: "🔍", title: "Find an Issue", desc: "Browse beginner-friendly issues" },
+                { num: "03", icon: "💻", title: "Contribute", desc: "Submit your first pull request" },
+                { num: "04", icon: "📈", title: "Learn & Grow", desc: "Get feedback and earn recognition" },
+              ].map((step, i) => (
+                <div key={i} className="text-center p-6 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all">
+                  <div className="text-3xl mb-3">{step.icon}</div>
+                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1">{step.num}</div>
+                  <h3 className="font-bold text-slate-900 dark:text-white mb-1">{step.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{step.desc}</p>
+                </div>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <input
-                className="w-full rounded-lg border-4 border-black dark:border-[#4a4238] bg-surface-lowest dark:bg-[#0f0e0c] px-4 py-4 text-text dark:text-[#f0ebe2] font-bold outline-none placeholder:text-muted/60 dark:placeholder:text-[#9b8f80]/70 focus:bg-surface-low dark:focus:bg-[#1f1c18] focus:ring-0 transition-colors shadow-sm"
-                placeholder={t("landing.username_email_placeholder")}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <input
-                className="w-full rounded-lg border-4 border-black dark:border-[#4a4238] bg-surface-lowest dark:bg-[#0f0e0c] px-4 py-4 text-text dark:text-[#f0ebe2] font-bold outline-none placeholder:text-muted/60 dark:placeholder:text-[#9b8f80]/70 focus:bg-surface-low dark:focus:bg-[#1f1c18] focus:ring-0 transition-colors shadow-sm"
-                type="password"
-                placeholder={t("landing.password_placeholder")}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full rounded-2xl border-4 border-black bg-primary px-5 py-4 font-black text-black text-xl shadow-card hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-card-sm transition-all uppercase tracking-wide mt-4 cursor-pointer"
-            >
-              {t("landing.assemble_run")}
-            </button>
-
-            <div className="flex items-center gap-4 my-6">
-              <div className="flex-1 h-1 bg-black dark:bg-[#4a4238]"></div>
-              <span className="font-black text-muted dark:text-[#9b8f80] text-sm uppercase">
-                {t("landing.new_contributors")}
-              </span>
-              <div className="flex-1 h-1 bg-black dark:bg-[#4a4238]"></div>
-            </div>
-
-            <a
-              href="/signup"
-              className="block text-center w-full rounded-2xl border-4 border-black bg-[#C3C0FF] px-5 py-4 font-black text-black text-xl shadow-card-sm hover:-translate-y-1 active:translate-y-1 transition-all uppercase tracking-wide mt-4 cursor-pointer"
-            >
-              {t("landing.create_account")}
-            </a>
-          </form>
+          <div className="mt-12">
+            <OrganizationsGrid />
+          </div>
         </div>
       </div>
     </div>
