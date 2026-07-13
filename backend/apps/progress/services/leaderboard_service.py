@@ -42,21 +42,50 @@ class LeaderboardService:
     def get_seasonal_key(season_name):
         return f"leaderboard:seasonal:{season_name}"
 
+    @staticmethod
+    def get_cohort_key(cohort_name):
+        return f"leaderboard:cohort:{cohort_name}"
+
+    @staticmethod
+    def determine_cohort(date_joined):
+        if not date_joined:
+            return "unknown"
+        year = date_joined.year
+        month = date_joined.month
+        if 1 <= month <= 3:
+            return f"winter_{year}"
+        elif 4 <= month <= 6:
+            return f"spring_{year}"
+        elif 7 <= month <= 9:
+            return f"summer_{year}"
+        else:
+            return f"fall_{year}"
+
     @classmethod
     def update_user_xp(cls, user_id: int, username: str, xp_delta: int):
         client = get_redis_client()
         if not client:
             return
 
-        pipeline = client.pipeline()
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            user = User.objects.get(id=user_id)
+            cohort = cls.determine_cohort(user.date_joined)
+        except User.DoesNotExist:
+            cohort = "unknown"
 
-        # Ensure we can map username to user_id
+        pipeline = client.pipeline()
         pipeline.hset("leaderboard:users", username, user_id)
 
-        # Update sets
+        # Update all time
         pipeline.zincrby(cls.ALL_TIME, xp_delta, username)
+        # Update weekly
         pipeline.zincrby(cls.get_weekly_key(), xp_delta, username)
+        # Update monthly
         pipeline.zincrby(cls.get_monthly_key(), xp_delta, username)
+        # Update cohort
+        pipeline.zincrby(cls.get_cohort_key(cohort), xp_delta, username)
         # Seasonal logic could be driven by an active season, for now let's assume a default season
         pipeline.zincrby(cls.get_seasonal_key("summer_2026"), xp_delta, username)
 
@@ -93,6 +122,10 @@ class LeaderboardService:
             key = cls.get_monthly_key()
         elif time_period.startswith("seasonal"):
             key = cls.get_seasonal_key("summer_2026")
+        elif time_period.startswith("cohort_"):
+            # e.g., cohort_summer_2026 -> summer_2026
+            cohort_name = time_period.replace("cohort_", "")
+            key = cls.get_cohort_key(cohort_name)
         else:
             key = cls.ALL_TIME
 
@@ -140,6 +173,9 @@ class LeaderboardService:
             key = cls.get_monthly_key()
         elif time_period.startswith("seasonal"):
             key = cls.get_seasonal_key("summer_2026")
+        elif time_period.startswith("cohort_"):
+            cohort_name = time_period.replace("cohort_", "")
+            key = cls.get_cohort_key(cohort_name)
         else:
             key = cls.ALL_TIME
 
