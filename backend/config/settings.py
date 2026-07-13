@@ -76,7 +76,7 @@ CONTENT_SECURITY_POLICY = os.getenv(
         "form-action 'self'; "
         "script-src 'self' https://cdn.jsdelivr.net; "
         "style-src 'self' https://cdn.jsdelivr.net; "
-        "img-src 'self' data: https://cdn.jsdelivr.net; "
+        "img-src 'self' data: blob: http: https: https://cdn.jsdelivr.net; "
         "font-src 'self' data: https://cdn.jsdelivr.net; "
         "connect-src 'self'; "
         "media-src 'self'; "

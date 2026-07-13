@@ -413,44 +413,7 @@ export function ProfileSettingsForm({ onChange }: ProfileSettingsFormProps) {
         )}
       </div>
 
-      <div className="space-y-4 mt-8 bg-[#E8F0FE] p-6 rounded-2xl border-4 border-black shadow-card dark:bg-[#151411]">
-        <h3 className="font-bold text-black text-xl uppercase tracking-wide">
-          📬 Email Preferences
-        </h3>
-        <p className="text-muted text-sm mb-4 font-medium">
-          Control how we communicate with you via email.
-        </p>
 
-        <label className="flex items-center gap-4 cursor-pointer">
-          <div className="relative">
-            <input
-              type="checkbox"
-              {...register("receive_weekly_digest")}
-              className="sr-only"
-              disabled={loading}
-            />
-            <div
-              className={`block w-14 h-8 rounded-full border-4 border-black transition-colors ${
-                watch("receive_weekly_digest") ? "bg-green-400" : "bg-gray-300"
-              }`}
-            ></div>
-            <div
-              className={`dot absolute left-1 top-1 bg-black w-4 h-4 rounded-full transition-transform ${
-                watch("receive_weekly_digest") ? "transform translate-x-6" : ""
-              }`}
-            ></div>
-          </div>
-          <div>
-            <div className="font-bold text-black uppercase tracking-wide">
-              Weekly Progress Digest
-            </div>
-            <div className="text-muted text-sm font-medium">
-              Receive a personalized summary of your XP, streaks, and smart AI
-              learning insights every week.
-            </div>
-          </div>
-        </label>
-      </div>
 
       <div className="space-y-4 mt-8">
         <button
