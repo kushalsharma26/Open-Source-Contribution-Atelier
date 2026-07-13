@@ -102,4 +102,4 @@ if settings.DEBUG:
             feature_flags_debug_view,
             name="feature-flags-debug",
         ),
-    ]
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
