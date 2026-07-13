@@ -324,10 +324,6 @@ export function UserProfilePage() {
         </div>
       </div>
 
-      {/* ACTIVITY HEATMAP SECTION */}
-      <div className="mt-8 rounded-3xl border-4 border-black bg-white dark:bg-[#121218] dark:border-[#3a3a45] p-8 shadow-card overflow-hidden">
-        <ActivityHeatmap username={user.username} />
-      </div>
     </div>
   );
 }
