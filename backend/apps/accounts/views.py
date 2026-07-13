@@ -740,8 +740,6 @@ class MagicLinkVerifyView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-token = OTPToken.objects.filter(user=user, token=otp, is_used=False).first()
-        if not token or token.is_expired():
         if magic_token.is_expired():
             return Response(
                 {
@@ -1324,3 +1322,62 @@ class PublicProfileView(APIView):
                 "completed_lessons": completed_lessons,
             }
         )
+class ShopStreakFreezeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from apps.progress.models import XPEvent, StreakProfile
+        from django.db.models import Sum
+        user = request.user
+
+        with transaction.atomic():
+            total_xp = (
+                XPEvent.objects.filter(user=user).aggregate(total=Sum("xp_delta"))["total"] or 0
+            )
+
+            FREEZE_COST = 100
+
+            if total_xp < FREEZE_COST:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Not enough XP to buy a streak freeze.",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            profile, _ = StreakProfile.objects.get_or_create(user=user)
+            if profile.streak_freezes >= 3:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "You can only have up to 3 streak freezes at a time.",
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Deduct XP
+            XPEvent.objects.create(
+                user=user,
+                source_type="shop",
+                base_points=FREEZE_COST,
+                multiplier=1.0,
+                xp_delta=-FREEZE_COST
+            )
+            
+            # Add freeze
+            profile.streak_freezes += 1
+            profile.save(update_fields=["streak_freezes", "updated_at"])
+
+            # Invalidate cache for dashboard
+            from apps.dashboard.signals import clear_dashboard_caches
+            clear_dashboard_caches(user_id=user.id)
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Streak freeze purchased successfully.",
+                    "available_xp": total_xp - FREEZE_COST,
+                },
+                status=status.HTTP_201_CREATED,
+            )
