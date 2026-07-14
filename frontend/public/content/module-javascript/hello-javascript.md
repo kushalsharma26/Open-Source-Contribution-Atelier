@@ -6,7 +6,7 @@
 
 ---
 
-## 🛠️ Hands-On Task: Running a JavaScript Program
+## 🛠️ Hands-On Task: Simple JavaScript Program
 
 ### Steps
 
