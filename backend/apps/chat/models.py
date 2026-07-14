@@ -9,6 +9,14 @@ class Message(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="messages")
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="replies",
+        help_text="The parent message if this is a reply in a thread.",
+    )
 
     objects = models.Manager()  # type: ignore
 

@@ -1,10 +1,14 @@
 import clsx from "clsx";
 
+import { MessageSquare } from "lucide-react";
+
 type ChatMessageProps = {
   message: string;
   username: string;
   isOwn: boolean;
   timestamp?: string;
+  replyCount?: number;
+  onReply?: () => void;
 };
 
 function getInitials(username: string): string {
@@ -56,7 +60,7 @@ export function ChatMessage({
         </div>
       </div>
 
-      <div className="flex flex-col max-w-[70%]">
+      <div className="flex flex-col max-w-[70%] group">
         {!isOwn && (
           <span className="text-[10px] font-black text-slate-500 dark:text-[#a0a0ab] ml-1 mb-0.5">
             @{username}
@@ -71,17 +75,41 @@ export function ChatMessage({
           )}
         >
           <p className="whitespace-pre-wrap break-words">{message}</p>
+
+          {onReply && (
+            <button
+              onClick={onReply}
+              className={clsx(
+                "absolute -right-10 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white dark:bg-slate-700 shadow-sm border border-black/5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-indigo-600",
+                isOwn && "-left-10 right-auto",
+              )}
+              title="Reply in thread"
+            >
+              <MessageSquare size={14} />
+            </button>
+          )}
         </div>
-        {timestamp && (
-          <span
-            className={clsx(
-              "text-[9px] text-muted/65 dark:text-gray-400 mt-1",
-              isOwn ? "text-right mr-1" : "text-left ml-1",
-            )}
-          >
-            {timestamp}
-          </span>
-        )}
+
+        <div
+          className={clsx(
+            "flex items-center gap-2 mt-1",
+            isOwn ? "justify-end mr-1" : "justify-start ml-1",
+          )}
+        >
+          {timestamp && (
+            <span className="text-[9px] text-muted/65 dark:text-gray-400">
+              {timestamp}
+            </span>
+          )}
+          {!!replyCount && replyCount > 0 && (
+            <button
+              onClick={onReply}
+              className="text-[10px] font-bold text-indigo-600 hover:underline flex items-center gap-1"
+            >
+              {replyCount} {replyCount === 1 ? "reply" : "replies"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
