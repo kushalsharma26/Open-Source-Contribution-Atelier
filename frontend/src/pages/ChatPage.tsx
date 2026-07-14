@@ -9,6 +9,23 @@ import { ChatInput } from "../components/chat/ChatInput";
 import { TypingIndicator } from "../components/chat/TypingIndicator";
 import { SectionCard } from "../components/ui/SectionCard";
 import { getAccessToken } from "../lib/authToken";
+import { Radio, Hash } from "lucide-react";
+
+function getAvatarColor(name: string): string {
+  const colors = [
+    "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500",
+    "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-teal-500",
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function getInitials(name: string): string {
+  return name.charAt(0).toUpperCase();
+}
 
 export function ChatPage() {
   const { user } = useAuth();
@@ -29,6 +46,7 @@ export function ChatPage() {
   const {
     messages,
     typingUsers,
+    onlineUsers,
     isConnected,
     sendMessage,
     onInputChange,

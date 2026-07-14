@@ -67,7 +67,11 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.input<typeof profileSchema>;
 
-export function ProfileSettingsForm() {
+interface ProfileSettingsFormProps {
+  onChange?: (data: Record<string, unknown>) => void;
+}
+
+export function ProfileSettingsForm({ onChange }: ProfileSettingsFormProps) {
   const { user, checkUser } = useAuth();
   const { addToast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -81,6 +85,7 @@ export function ProfileSettingsForm() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -110,6 +115,11 @@ export function ProfileSettingsForm() {
       });
     }
   }, [user, reset]);
+
+  const formValues = watch();
+  useEffect(() => {
+    onChange?.(formValues as unknown as Record<string, unknown>);
+  }, [formValues, onChange]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     setLoading(true);

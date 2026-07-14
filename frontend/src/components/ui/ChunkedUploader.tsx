@@ -118,7 +118,7 @@ export function ChunkedUploader() {
 
         if (!chunkRes.ok) throw new Error("Chunk upload failed");
 
-        const newProgress = Math.floor(((i + 1) / totalChunks) * 100);
+        const newProgress = Math.floor(((index + 1) / totalChunks) * 100);
         setProgress(newProgress);
       }
 

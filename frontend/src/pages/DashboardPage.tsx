@@ -9,7 +9,7 @@ import SkeletonAdminDashboard from "../components/ui/skeletons/SkeletonAdminDash
 import SkeletonContributorDashboard from "../components/ui/skeletons/SkeletonContributorDashboard";
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { useElementSize } from "../hooks/useElementSize";
-import { fetchLessonsApi, Lesson } from "../lib/lessons";
+import { fetchLessonsApi, Lesson, buildModulesFromLessons } from "../lib/lessons";
 import { ContinueLearning } from '../components/ContinueLearning';
 import { useUserProgress } from "../hooks/useUserProgress";
 import { useBookmarks } from "../hooks/useBookmarks";
@@ -87,6 +87,36 @@ interface AssignedIssue {
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { progress, isLoading: progressLoading, isLessonCompleted } = useUserProgress();
+  const { bookmarks, toggleBookmark } = useBookmarks();
+
+  const { data: lessonsData = [], isLoading: lessonsLoading } = useQuery({
+    queryKey: ["dashboardLessons"],
+    queryFn: fetchLessonsApi,
+  });
+  const lessons = lessonsData;
+  const curriculumData = useMemo(() => buildModulesFromLessons(lessons), [lessons]);
+
+  const { data: contributorData, isLoading: contributorLoading } = useQuery({
+    queryKey: ["contributorStats"],
+    queryFn: () => fetchApi("/dashboard/stats/", { suppressErrorToast: true }),
+    enabled: !!user && !user.is_staff,
+  });
+
+  const { data: learningPathData } = useQuery({
+    queryKey: ["learningPath"],
+    queryFn: () =>
+      fetchApi("/dashboard/learning-path/", { suppressErrorToast: true }),
+    enabled: !!user && !user.is_staff && !!lessons.length,
+  });
+
+  const showSkeleton = progressLoading || lessonsLoading || contributorLoading;
+
+  const [factOfDay, setFactOfDay] = useState("");
+  useEffect(() => {
+    setFactOfDay(FACTS[Math.floor(Math.random() * FACTS.length)]);
+  }, []);
+
   const [gitHubContributors, setGitHubContributors] = useState<GitHubContributor[]>([]);
   const fallbackContributors: GitHubContributor[] = [];
 
@@ -178,8 +208,6 @@ export function DashboardPage() {
     // Build the lessons queue (uncompleted ones first, up to 3)
     const queue = lessons.filter((l) => !isLessonCompleted(l.slug)).slice(0, 3);
 
-    const [lastLesson, setLastLesson] = useState(null);
-
     // Calculate which badges are earned
     const earned = new Set<string>(
       contributorData?.personal_stats?.earned_badges || [],
@@ -205,6 +233,15 @@ export function DashboardPage() {
       earnedBadges: Array.from(earned),
     };
   }, [lessons, curriculumData, isLessonCompleted, user, contributorData]);
+
+  const lastLesson = useMemo(() => {
+    if (!lessons.length) return null;
+    const incomplete = lessons.find((l) => !isLessonCompleted(l.slug));
+    if (incomplete) {
+      return { slug: incomplete.slug, title: incomplete.title, progress: 0 };
+    }
+    return null;
+  }, [lessons, isLessonCompleted]);
 
   // Fetch user certificate if course is completed
   const { data: certificateData } = useQuery({

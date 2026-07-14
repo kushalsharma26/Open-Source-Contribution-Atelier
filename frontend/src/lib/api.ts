@@ -557,3 +557,9 @@ export async function exportWorkspaceZip(projectId: string): Promise<void> {
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
 }
+
+export function getMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return url;
+}
