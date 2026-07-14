@@ -103,13 +103,23 @@ export function ChunkedUploader() {
         formData.append("chunk", chunk);
         formData.append("chunk_index", index.toString());
 
-        const chunkResponse = await fetch(`/api/uploads/chunk/${currentSessionId}/`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${getAccessToken() ?? ""}` },
-          body: formData,
-        });
-        if (!chunkResponse.ok) throw new Error("Chunk upload failed");
-        setProgress(Math.floor(((index + 1) / totalChunks) * 100));
+        // We use fetch directly for FormData
+        const token = getAccessToken();
+        const chunkRes = await fetch(
+          `/api/uploads/chunk/${currentSessionId}/`,
+          {
+            method: "POST",
+            headers: token
+              ? { Authorization: `Bearer ${token}` }
+              : undefined,
+            body: formData,
+          },
+        );
+
+        if (!chunkRes.ok) throw new Error("Chunk upload failed");
+
+        const newProgress = Math.floor(((i + 1) / totalChunks) * 100);
+        setProgress(newProgress);
       }
 
       const completion = await fetchApi(`/uploads/complete/${currentSessionId}/`, { method: "POST" });

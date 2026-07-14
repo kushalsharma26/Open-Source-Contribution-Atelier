@@ -31,9 +31,12 @@ urlpatterns = [
     path("api/users/", include("apps.accounts.user_urls")),
     # ── Core Apps ──────────────────────────────────────────────────────────────
     path("api/content/", include("apps.content.urls")),
+    path("api/billing/", include("apps.billing.urls")),
     path("api/progress/", include("apps.progress.urls")),
+    path("api/localization/", include("apps.localization.urls")),
     path("api/challenges/", include("apps.challenges.urls")),
     path("api/sandbox/", include("apps.sandbox.urls")),
+    path("api/gamification/", include("apps.gamification.urls")),
     # ── Notifications & Real-time ─────────────────────────────────────────────
     path("api/notifications/", include("apps.notifications.urls")),
     path("api/dashboard/", include("apps.dashboard.urls")),
@@ -51,6 +54,7 @@ urlpatterns = [
     path("api/moderation/", include("apps.moderation.urls")),
     path("api/portfolio/", include("apps.portfolio.urls")),
     path("api/organizations/", include("apps.organizations.urls")),
+    path("api/accessibility/", include("apps.accessibility.urls")),
     # ── Events & GraphQL ──────────────────────────────────────────────────────
     # path("api/events/", include("apps.events.urls")),
     path("api/graphql/", include("apps.graphql_gateway.urls")),
