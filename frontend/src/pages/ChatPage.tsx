@@ -174,40 +174,16 @@ export function ChatPage() {
             users={typingUsers}
             className="px-1 pb-1 flex-shrink-0"
           />
-          <span className="text-xs font-bold text-muted">
-            {isConnected ? "Connected" : "Disconnected"}
-          </span>
-        </div>
 
-        <div className="flex-1 overflow-y-auto space-y-3 px-1">
-          {messages.length === 0 && (
-            <p className="text-center text-sm text-muted py-8">
-              No messages yet. Start the conversation!
-            </p>
-          )}
-          {messages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg.message}
-              username={msg.username}
-              isOwn={msg.user_id === user?.id}
-              timestamp={msg.timestamp}
-            />
-          ))}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        <TypingIndicator users={typingUsers} className="px-1 pb-1" />
-
-        <ChatInput
-          onSendMessage={sendMessage}
-          onInputChange={onInputChange}
-          onInputBlur={onInputBlur}
-          onInputSubmit={onInputSubmit}
-          disabled={!isConnected}
-        />
-      </SectionCard>
+          <ChatInput
+            onSendMessage={sendMessage}
+            onInputChange={onInputChange}
+            onInputBlur={onInputBlur}
+            onInputSubmit={onInputSubmit}
+            disabled={!isConnected}
+          />
+        </section>
+      </div>
     </div>
   );
 }
