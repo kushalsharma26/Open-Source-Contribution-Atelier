@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { GitTerminal } from "../components/GitTerminal";
 import { useNavigate, useParams, Link } from "react-router-dom";
@@ -532,6 +532,7 @@ export function LessonPage() {
           score: lesson.points || 15,
           completed: true,
         });
+      }
       const wasCompleted = isLessonCompleted(lesson.slug);
       syncProgress({
         lesson_slug: lesson.slug,
@@ -647,7 +648,7 @@ export function LessonPage() {
       </div>
 
       <span className="updated-date">
-        Updated: {new Date(lesson.updatedAt).toLocaleDateString()}
+        Updated: {new Date((lesson as any).updatedAt || (lesson as any).updated_at || new Date()).toLocaleDateString()}
       </span>
 
       {/* Backdrop overlay — closes drawer on click-outside on mobile */}
@@ -1307,7 +1308,7 @@ export function LessonPage() {
         <div className="lesson-info">
          <h1>{lesson.title}</h1>
           <span className="read-time">
-           ⏱️ {calculateReadTime(lesson.content)} min read
+           ⏱️ {calculateReadTime((lesson as any).explanation || (lesson as any).content || "")} min read
          </span>
         </div>
 
