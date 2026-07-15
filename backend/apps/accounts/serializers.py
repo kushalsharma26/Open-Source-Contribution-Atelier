@@ -321,3 +321,19 @@ class MagicLinkVerifySerializer(serializers.Serializer):
     """Accept a magic link token to verify and login the user."""
 
     token = serializers.UUIDField()
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=8)
+
+    def validate_new_password(self, value):
+        return validate_strong_password(value)
+
+
+class AvatarUploadSerializer(serializers.Serializer):
+    avatar = serializers.ImageField(required=True)
+
+
+class PasswordResetValidateTokenSerializer(serializers.Serializer):
+    token = serializers.UUIDField(required=True)
