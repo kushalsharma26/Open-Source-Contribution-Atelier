@@ -7,6 +7,7 @@ import { useTheme } from "../hooks/useTheme";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../store/hooks";
 import { setDemoUser } from "../features/auth/authSlice";
+import { DraggableSticker } from "../components/ui/DraggableSticker";
 
 const getEnvVar = (key: string): string => {
   if (typeof process !== "undefined" && process.env && process.env[key])
@@ -91,8 +92,39 @@ export function LandingPage() {
     },
   });
 
+  const getFeedbackBubble = () => {
+    if (isPasswordFocused) {
+      if (password.length === 0) return { emoji: "🔒", text: "Keep it secret, keep it safe!" };
+      if (password.length < 6) return { emoji: "⚠️", text: "Weak password! (Try adding more characters)" };
+      return { emoji: "😎", text: "Fortress security! Excellent password." };
+    }
+    if (isEmailFocused) {
+      if (email.length === 0) return { emoji: "✍️", text: "Type your legendary username!" };
+      return { emoji: "🚀", text: "Ready to merge some pull requests?" };
+    }
+    return { emoji: "👋", text: "Welcome back to the Atelier!" };
+  };
+
+  const bubble = getFeedbackBubble();
+
   return (
     <div className="min-h-screen md:h-screen md:overflow-hidden bg-surface-lowest dark:bg-[#0a0a0f] text-text transition-colors duration-300 relative flex items-center justify-center p-3 sm:p-6">
+      {/* Draggable Stickers scattered in the background */}
+      <div className="hidden lg:block select-none pointer-events-auto">
+        <DraggableSticker initialX={80} initialY={100} className="bg-[#FF6B6B] text-white rotate-[-6deg]">
+          Bug Hunter 🐛
+        </DraggableSticker>
+        <DraggableSticker initialX={100} initialY={650} className="bg-[#4D96FF] text-white rotate-[8deg]">
+          git commit -m "success" 🚀
+        </DraggableSticker>
+        <DraggableSticker initialX={850} initialY={120} className="bg-[#6BCB77] text-black rotate-[4deg]">
+          100% Merged ✅
+        </DraggableSticker>
+        <DraggableSticker initialX={900} initialY={620} className="bg-[#FFD93D] text-black rotate-[-10deg]">
+          Git expert 👑
+        </DraggableSticker>
+      </div>
+
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12 items-center">
         {/* Left Side: Headline & Copy with integrated Theme Switcher */}
         <div className="text-center md:text-left space-y-4">
@@ -151,55 +183,14 @@ export function LandingPage() {
             </button>
           </div>
 
-          {/* Playful Interactive Robot Mascot */}
-          <div className="flex flex-col items-center justify-center mb-5 select-none animate-fade-in">
-            <div className="relative w-28 h-28 bg-[#FFF5E6] dark:bg-[#201c18] rounded-[2rem] border-4 border-black dark:border-[#4a4238] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-none flex items-center justify-center overflow-hidden transition-all duration-300">
-              {/* Screen Bezel */}
-              <div className="w-20 h-16 bg-[#1a1a24] rounded-2xl border-4 border-black dark:border-[#4a4238] relative flex items-center justify-center overflow-hidden">
-                {isPasswordFocused ? (
-                  /* Shy / Covered Screen Face */
-                  <div className="flex gap-1.5 animate-bounce">
-                    <span className="text-xl">🙈</span>
-                    <span className="text-xl">🙈</span>
-                  </div>
-                ) : (
-                  /* Interactive Eyes */
-                  <div className="flex justify-between w-12 px-2 relative transition-all duration-150">
-                    <div
-                      className="w-3.5 h-3.5 bg-cyan-400 rounded-full shadow-[0_0_8px_#22d3ee] transition-all duration-150"
-                      style={{
-                        transform: isEmailFocused
-                          ? `translate(${Math.min(4, email.length * 0.2) - 2}px, 1px)`
-                          : 'translate(0px, 0px)'
-                      }}
-                    />
-                    <div
-                      className="w-3.5 h-3.5 bg-cyan-400 rounded-full shadow-[0_0_8px_#22d3ee] transition-all duration-150"
-                      style={{
-                        transform: isEmailFocused
-                          ? `translate(${Math.min(4, email.length * 0.2) - 2}px, 1px)`
-                          : 'translate(0px, 0px)'
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Antenna */}
-              <div className="absolute top-1.5 w-1 h-3 bg-black dark:bg-[#4a4238] rounded-full flex items-center justify-center">
-                <div className="w-2.5 h-2.5 bg-red-400 border-2 border-black rounded-full -mt-2 animate-pulse" />
-              </div>
-
-              {/* Sliding paws that cover eyes */}
-              <div
-                className="absolute bottom-0 left-0 right-0 flex justify-between px-3 transition-all duration-500 ease-out pointer-events-none"
-                style={{
-                  transform: isPasswordFocused ? 'translateY(-14px)' : 'translateY(28px)'
-                }}
-              >
-                <span className="text-2xl rotate-[20deg] drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">🐾</span>
-                <span className="text-2xl rotate-[-20deg] drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">🐾</span>
-              </div>
+          {/* Playful Interactive Speech Bubble Sticker */}
+          <div className="flex flex-col items-center justify-center mb-6 select-none animate-fade-in">
+            <div className="relative border-4 border-black bg-yellow-300 dark:bg-[#e6c229] px-4 py-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black font-black text-center text-xs flex items-center gap-2 max-w-[280px]">
+              <span className="text-xl animate-bounce">{bubble.emoji}</span>
+              <span>{bubble.text}</span>
+              {/* Little speech bubble triangle arrow */}
+              <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-black" />
+              <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-yellow-300 dark:border-t-[#e6c229]" />
             </div>
           </div>
 
