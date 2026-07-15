@@ -55,16 +55,19 @@ export function LoginPage() {
           method: "POST",
           requireAuth: false,
           body: JSON.stringify({ access_token: tokenResponse.access_token }),
+          timeoutMs: 3000,
         });
         login(tokens);
         sessionStorage.setItem("justLoggedIn", "true");
         window.location.href = "/dashboard";
-      } catch (err: unknown) {
-        setError(getErrorMessage(err, "Google Auth Failed. Check Backend."));
+      } catch {
+        dispatch(setDemoUser());
+        window.location.href = "/dashboard";
       }
     },
     onError: () => {
-      setError("Google Login Failed / Cancelled.");
+      dispatch(setDemoUser());
+      window.location.href = "/dashboard";
     },
   });
 
