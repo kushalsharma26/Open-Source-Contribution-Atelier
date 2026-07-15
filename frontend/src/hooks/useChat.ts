@@ -62,7 +62,7 @@ export function useChat({ roomId, token, username }: UseChatOptions) {
         if (senderId === myId) {
           setMessages((prev) => {
             const optimisticIdx = prev.findIndex((m) =>
-              m.id.endsWith("_optimistic"),
+              String(m.id).endsWith("_optimistic"),
             );
             if (optimisticIdx !== -1) {
               return prev.map((m, idx) =>

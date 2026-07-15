@@ -4,7 +4,6 @@ import toast from "react-hot-toast";
 import { fetchBounties, claimBounty, submitBounty, Bounty } from "../lib/api";
 import { useAuth } from "../features/auth/AuthContext";
 import { SectionCard } from "../components/ui/SectionCard";
-import { Button } from "../stories/Button";
 import { CheckCircle, Target, Loader2 } from "lucide-react";
 
 export function BountiesPage() {
@@ -113,29 +112,26 @@ export function BountiesPage() {
 
               <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 {bounty.status === "Open" ? (
-                  <Button
+                  <button
                     onClick={() => handleClaim(bounty.id)}
                     disabled={claimingId === bounty.id}
-                    variant="primary"
-                    className="w-full"
+                    className="w-full px-4 py-2 bg-primary text-black font-bold rounded-lg border-4 border-black shadow-card hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-card-sm transition-all disabled:opacity-60"
                   >
                     {claimingId === bounty.id ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2 inline" />
                     ) : null}
                     Claim Bounty
-                  </Button>
+                  </button>
                 ) : bounty.status === "Claimed" && bounty.claimed_by === user?.id ? (
                   <div className="flex w-full gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      asChild
+                    <Link
+                      to="/sandbox"
+                      className="flex-1 px-4 py-2 text-center bg-white text-black font-bold rounded-lg border-4 border-black shadow-card hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-card-sm transition-all"
                     >
-                      <Link to="/sandbox">Sandbox</Link>
-                    </Button>
-                    <Button
-                      variant="primary"
-                      className="flex-1"
+                      Sandbox
+                    </Link>
+                    <button
+                      className="flex-1 px-4 py-2 bg-primary text-black font-bold rounded-lg border-4 border-black shadow-card hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-card-sm transition-all disabled:opacity-60"
                       onClick={() => handleSubmit(bounty.id)}
                       disabled={submittingId === bounty.id}
                     >
@@ -143,7 +139,7 @@ export function BountiesPage() {
                         <Loader2 className="h-4 w-4 animate-spin mr-2 inline" />
                       ) : null}
                       Submit Code
-                    </Button>
+                    </button>
                   </div>
                 ) : bounty.status === "Claimed" ? (
                   <p className="text-sm text-muted w-full text-center">

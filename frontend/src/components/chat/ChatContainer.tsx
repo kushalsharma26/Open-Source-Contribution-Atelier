@@ -6,7 +6,7 @@ import { ChatInput } from "./ChatInput";
 import { TypingIndicator } from "./TypingIndicator";
 import { SectionCard } from "../ui/SectionCard";
 import { getAccessToken } from "../../lib/authToken";
-import { ChatThreadPanel } from "./ChatThreadPanel";
+import { ChatThreadPanel } from "./chatthreadpanel";
 
 export function ChatContainer() {
   const { user } = useAuth();

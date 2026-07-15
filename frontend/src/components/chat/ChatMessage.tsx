@@ -50,6 +50,8 @@ export function ChatMessage({
   username,
   isOwn,
   timestamp,
+  replyCount,
+  onReply,
 }: ChatMessageProps) {
   return (
     <div
@@ -83,9 +85,9 @@ export function ChatMessage({
               : "bg-slate-50 text-gray-900 border-black/5 rounded-bl-none dark:bg-slate-800/80 dark:text-gray-100 dark:border-slate-700/60",
           )}
         >
+          <div className="break-words">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            className="break-words"
             components={{
               p({ children }) {
                 return <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>;
@@ -147,6 +149,7 @@ export function ChatMessage({
           >
             {message}
           </ReactMarkdown>
+          </div>
 
           {onReply && (
             <button

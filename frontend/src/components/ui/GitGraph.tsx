@@ -40,6 +40,7 @@ const CommitNode = ({ data }: NodeProps) => {
   const isHead = data.isHead as boolean;
   const isConflict = data.isConflict as boolean;
   const branchColor = data.branchColor as string;
+  const message = data.message as string;
 
   return (
     <div
@@ -67,8 +68,8 @@ const CommitNode = ({ data }: NodeProps) => {
       )}
 
       <div className="text-xs font-mono font-bold">{String(data.id).substring(0, 7)}</div>
-      <div className="text-[10px] text-gray-500 mt-1 truncate w-full text-center px-1" title={String(data.message)}>
-        {data.message}
+      <div className="text-[10px] text-gray-500 mt-1 truncate w-full text-center px-1" title={message}>
+        {message}
       </div>
       
       <Handle type="source" position={Position.Right} className="opacity-0" />
